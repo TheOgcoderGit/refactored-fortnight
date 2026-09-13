@@ -1,0 +1,545 @@
+# Baseline inventory (before edits)
+
+Original ZIP SHA256: 98b28958078f1a886cf0fc1548f546cbd8c704d36b8acd943cf019c20709fd95
+
+## Files
+- ChannelFlowAI5_monetization/bot/handlers.py
+- bot/__init__.py
+- bot/admin_panel.py
+- bot/admin_promo_handlers.py
+- bot/handlers.py
+- bot/keyboards.py
+- bot/notifier.py
+- bot/owner_panel.py
+- bot/states.py
+- check_db.py
+- config.py
+- core/authorize.py
+- core/client.py
+- core/client_pool.py
+- core/forwarder.py
+- core/listener.py
+- core/pairing_endpoint.py
+- core/processing_listener.py
+- core/session_crypto.py
+- core/subscription_scheduler.py
+- core/telegram_utils.py
+- core/user_sessions.py
+- database/__init__.py
+- database/db.py
+- database/models.py
+- database/schema.py
+- destinations/__init__.py
+- destinations/base.py
+- destinations/instagram_destination.py
+- destinations/telegram_destination.py
+- destinations/threads_destination.py
+- destinations/whatsapp_destination.py
+- find_handler.py
+- find_handler2.py
+- main.py
+- pairing_server.py
+- services/affiliate_service.py
+- services/ai_service.py
+- services/app_config.py
+- services/audit_service.py
+- services/content_rules_service.py
+- services/coupon_service.py
+- services/crypto_provider.py
+- services/dedup_service.py
+- services/destination_service.py
+- services/formatting_service.py
+- services/giveaway_service.py
+- services/i18n.py
+- services/i18n_service.py
+- services/instagram_service.py
+- services/job_queue.py
+- services/knowledge_service.py
+- services/log_service.py
+- services/notification_service.py
+- services/payment_service.py
+- services/plan_service.py
+- services/platform_accounts_service.py
+- services/platform_registry.py
+- services/pricing_service.py
+- services/processing_service.py
+- services/project_service.py
+- services/promo_service.py
+- services/referral_service.py
+- services/settings_service.py
+- services/source_health.py
+- services/source_service.py
+- services/stats_service.py
+- services/support_ai_service.py
+- services/support_service.py
+- services/text_replacement_service.py
+- services/wallet_service.py
+- services/watermark_service.py
+- services/whatsapp_content.py
+- services/whatsapp_pairing.py
+- test_db.py
+- test_db_migration.py
+- test_final_fix.py
+- test_import.py
+- test_search.py
+
+## Commands
+- `main.py`: 'start' → `start`
+- `main.py`: 'cancel' → `cancel`
+- `main.py`: 'admin' → `admin_dashboard`
+- `main.py`: 'setplan' → `setplan_command`
+- `main.py`: 'setprice' → `setprice_command`
+- `main.py`: 'setduration' → `setduration_command`
+- `main.py`: 'planconfig' → `planconfig_command`
+- `main.py`: 'payments' → `payments_command`
+- `main.py`: 'walletadjust' → `walletadjust_command`
+- `main.py`: 'connect' → `connect_command`
+- `main.py`: 'owner' → `owner_command`
+- `main.py`: 'post' → `post_command`
+- `main.py`: 'broadcast' → `broadcast_command`
+
+## Generated callbacks (static inventory, not proof of routing)
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'acct:connect'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'instagram:{project_id}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'acct:back'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'acct:upgrade'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:plan:{plan}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'settings:wallet'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:plan:{plan_name}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f"upgrade:duration:{plan}:{row['months']}"`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:method:{plan}:{months}:crypto'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:method:{plan}:{months}:upi'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:verify:{request_id}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:cancel:{request_id}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'wallet:topup'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'settings:refresh'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'wallet:amount:{amt}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `'settings:wallet'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'wallet:method:{amount}:crypto'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'wallet:method:{amount}:upi'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:verify:{request_id}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f'upgrade:cancel:{request_id}'`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f"igdeldest:{destination_id}:{destination['project_id']}"`
+- `ChannelFlowAI5_monetization/bot/handlers.py`: `f"instagram:{destination['project_id']}"`
+- `bot/admin_panel.py`: `f'adm:support:{s}'`
+- `bot/admin_panel.py`: `'adm:payq:SUBMITTED:0'`
+- `bot/admin_panel.py`: `'adm:payq:SUBMITTED_TOPUP:0'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:finance'`
+- `bot/admin_panel.py`: `cb`
+- `bot/admin_panel.py`: `'adm:users'`
+- `bot/admin_panel.py`: `'adm:couponcreate'`
+- `bot/admin_panel.py`: `'adm:marketing'`
+- `bot/admin_panel.py`: `f"adm:gwdetail:{g['id']}"`
+- `bot/admin_panel.py`: `'adm:marketing'`
+- `bot/admin_panel.py`: `'adm:giveaways'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `f'adm:ticketreply:{tid}'`
+- `bot/admin_panel.py`: `f'adm:ticketnote:{tid}'`
+- `bot/admin_panel.py`: `'adm:support:open'`
+- `bot/admin_panel.py`: `'adm:wapaircleanup'`
+- `bot/admin_panel.py`: `'adm:platforms'`
+- `bot/admin_panel.py`: `'adm:wapairstatus'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:adminadd'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `f'adm:admintoggleactive:{aid}'`
+- `bot/admin_panel.py`: `'adm:admins'`
+- `bot/admin_panel.py`: `'adm:view'`
+- `bot/admin_panel.py`: `'adm:finance'`
+- `bot/admin_panel.py`: `'adm:users'`
+- `bot/admin_panel.py`: `'adm:marketing'`
+- `bot/admin_panel.py`: `'adm:support'`
+- `bot/admin_panel.py`: `'adm:analytics'`
+- `bot/admin_panel.py`: `'adm:platforms'`
+- `bot/admin_panel.py`: `'adm:system'`
+- `bot/admin_panel.py`: `'adm:audit'`
+- `bot/admin_panel.py`: `'adm:admins'`
+- `bot/admin_panel.py`: `f'adm:usersuspend:{uid}'`
+- `bot/admin_panel.py`: `f'adm:userban:{uid}'`
+- `bot/admin_panel.py`: `f'adm:userunsuspend:{uid}'`
+- `bot/admin_panel.py`: `f'adm:gwselect:{gid}'`
+- `bot/admin_panel.py`: `f'adm:gwdeliver:{gid}'`
+- `bot/admin_panel.py`: `f"adm:ticket:{t['id']}"`
+- `bot/admin_panel.py`: `f'adm:ticketstatus:{tid}:{ns}'`
+- `bot/admin_panel.py`: `f'adm:ticketstatus:{tid}:open'`
+- `bot/admin_panel.py`: `f"adm:platformtoggle:{r['platform']}"`
+- `bot/admin_panel.py`: `f"adm:adminperms:{a['telegram_id']}"`
+- `bot/admin_panel.py`: `f"adm:adminremove:{a['telegram_id']}"`
+- `bot/admin_panel.py`: `f'adm:admintoggleperm:{aid}:{perm}'`
+- `bot/admin_panel.py`: `f"adm:payapprove:{r['id']}"`
+- `bot/admin_panel.py`: `f"adm:payreject:{r['id']}"`
+- `bot/admin_panel.py`: `'noop'`
+- `bot/admin_panel.py`: `f"adm:cpondeactivate:{c['id']}"`
+- `bot/admin_panel.py`: `'adm:refresh:view'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:usersearch'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:coupons'`
+- `bot/admin_panel.py`: `'adm:giveaways'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:refresh:analytics'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:refresh:system'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:refresh:audit'`
+- `bot/admin_panel.py`: `'admback'`
+- `bot/admin_panel.py`: `'adm:platforms'`
+- `bot/admin_panel.py`: `'adm:admins'`
+- `bot/admin_panel.py`: `'adm:finance'`
+- `bot/admin_promo_handlers.py`: `'promo:abort'`
+- `bot/admin_promo_handlers.py`: `'promo:confirm'`
+- `bot/admin_promo_handlers.py`: `'promo:abort'`
+- `bot/admin_promo_handlers.py`: `'promo:scope:all'`
+- `bot/admin_promo_handlers.py`: `'promo:scope:all'`
+- `bot/admin_promo_handlers.py`: `'promo:scope:telegram'`
+- `bot/admin_promo_handlers.py`: `'promo:scope:instagram'`
+- `bot/admin_promo_handlers.py`: `'promo:scope:both'`
+- `bot/admin_promo_handlers.py`: `f"promo:project:{project['id']}"`
+- `bot/handlers.py`: `'acct:connect'`
+- `bot/handlers.py`: `f"upgrade:approve:{r['id']}"`
+- `bot/handlers.py`: `f"upgrade:reject:{r['id']}"`
+- `bot/handlers.py`: `f'instagram:{project_id}'`
+- `bot/handlers.py`: `'acct:back'`
+- `bot/handlers.py`: `'acct:upgrade'`
+- `bot/handlers.py`: `f'upgrade:plan:{plan}'`
+- `bot/handlers.py`: `'settings:wallet'`
+- `bot/handlers.py`: `f'upgrade:plan:{plan_name}'`
+- `bot/handlers.py`: `f"upgrade:duration:{plan}:{row['months']}"`
+- `bot/handlers.py`: `f'upgrade:method:{plan}:{months}:crypto'`
+- `bot/handlers.py`: `f'upgrade:method:{plan}:{months}:upi'`
+- `bot/handlers.py`: `f'upgrade:verify:{request_id}'`
+- `bot/handlers.py`: `f'upgrade:cancel:{request_id}'`
+- `bot/handlers.py`: `'wallet:topup'`
+- `bot/handlers.py`: `'settings:refresh'`
+- `bot/handlers.py`: `f'wallet:amount:{amt}'`
+- `bot/handlers.py`: `'settings:wallet'`
+- `bot/handlers.py`: `f'wallet:method:{amount}:crypto'`
+- `bot/handlers.py`: `f'wallet:method:{amount}:upi'`
+- `bot/handlers.py`: `f'upgrade:verify:{request_id}'`
+- `bot/handlers.py`: `f'upgrade:cancel:{request_id}'`
+- `bot/handlers.py`: `f"igdeldest:{destination_id}:{destination['project_id']}"`
+- `bot/handlers.py`: `f"instagram:{destination['project_id']}"`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'stop:{project_id}'`
+- `bot/keyboards.py`: `f'instagram:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'stats:{project_id}'`
+- `bot/keyboards.py`: `f'cloneproj:{project_id}'`
+- `bot/keyboards.py`: `f'deleteconfirm:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `'nav:projects'`
+- `bot/keyboards.py`: `f'listsource:{project_id}'`
+- `bot/keyboards.py`: `f'listdestination:{project_id}'`
+- `bot/keyboards.py`: `f'projfilters:{project_id}'`
+- `bot/keyboards.py`: `f'projsettings:{project_id}'`
+- `bot/keyboards.py`: `f'aisettings:{project_id}'`
+- `bot/keyboards.py`: `f'affiliatesettings:{project_id}'`
+- `bot/keyboards.py`: `f'wmsettings:{project_id}'`
+- `bot/keyboards.py`: `f'fmtroot:{project_id}'`
+- `bot/keyboards.py`: `f'setdelay:{project_id}'`
+- `bot/keyboards.py`: `f'cloneproj:{project_id}'`
+- `bot/keyboards.py`: `f'analytics:{project_id}'`
+- `bot/keyboards.py`: `f'rename:{project_id}'`
+- `bot/keyboards.py`: `f'deleteconfirm:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'projcard:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'filterkw:{project_id}'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:hashtag_filter'`
+- `bot/keyboards.py`: `f'filterdomains:{project_id}'`
+- `bot/keyboards.py`: `f'filtersenders:{project_id}'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:length'`
+- `bot/keyboards.py`: `f'setregex:{project_id}'`
+- `bot/keyboards.py`: `f'mediafilter:{project_id}'`
+- `bot/keyboards.py`: `f'clearfiltersconfirm:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'mediafilterset:{project_id}:{choice}'`
+- `bot/keyboards.py`: `f'projfilters:{project_id}'`
+- `bot/keyboards.py`: `f'fmtreplaceadd:{project_id}'`
+- `bot/keyboards.py`: `f'fmtroot:{project_id}'`
+- `bot/keyboards.py`: `f'fmtremoveadd:{project_id}'`
+- `bot/keyboards.py`: `f'fmtroot:{project_id}'`
+- `bot/keyboards.py`: `'acct:plan'`
+- `bot/keyboards.py`: `'acct:wallet'`
+- `bot/keyboards.py`: `'acct:earn'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `'pacct:new'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `f'pacct:dconfirm:{account_id}'`
+- `bot/keyboards.py`: `'pacct:list'`
+- `bot/keyboards.py`: `'acct:plan'`
+- `bot/keyboards.py`: `'lang:en'`
+- `bot/keyboards.py`: `'lang:hi'`
+- `bot/keyboards.py`: `'lang:bn'`
+- `bot/keyboards.py`: `'lang:ur'`
+- `bot/keyboards.py`: `'lang:es'`
+- `bot/keyboards.py`: `'lang:ar'`
+- `bot/keyboards.py`: `'lang:id'`
+- `bot/keyboards.py`: `'nav:settings'`
+- `bot/keyboards.py`: `'support:ai'`
+- `bot/keyboards.py`: `'support:group'`
+- `bot/keyboards.py`: `'support:ai'`
+- `bot/keyboards.py`: `'support:group'`
+- `bot/keyboards.py`: `'help:faq'`
+- `bot/keyboards.py`: `'help:guide'`
+- `bot/keyboards.py`: `'help:tour'`
+- `bot/keyboards.py`: `'support:list'`
+- `bot/keyboards.py`: `'support:new'`
+- `bot/keyboards.py`: `'help:feedback'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `'nav:help'`
+- `bot/keyboards.py`: `'support:list'`
+- `bot/keyboards.py`: `'pay:plans:stars'`
+- `bot/keyboards.py`: `'acct:plan'`
+- `bot/keyboards.py`: `'pay:method'`
+- `bot/keyboards.py`: `f'pay:plans:{method}'`
+- `bot/keyboards.py`: `'admin:refresh'`
+- `bot/keyboards.py`: `'admin:payments'`
+- `bot/keyboards.py`: `'admin:broadcast'`
+- `bot/keyboards.py`: `'admin:maintenance'`
+- `bot/keyboards.py`: `'platform:telegram'`
+- `bot/keyboards.py`: `'platform:locked'`
+- `bot/keyboards.py`: `f'igsetprocessing:{project_id}'`
+- `bot/keyboards.py`: `f'igadddest:{project_id}'`
+- `bot/keyboards.py`: `f'igqueue:{project_id}:0'`
+- `bot/keyboards.py`: `f'igformat:{project_id}'`
+- `bot/keyboards.py`: `f'projcard:{project_id}'`
+- `bot/keyboards.py`: `f"projcard:{p['id']}"`
+- `bot/keyboards.py`: `'newproj'`
+- `bot/keyboards.py`: `f'start:{project_id}'`
+- `bot/keyboards.py`: `f'start:{project_id}'`
+- `bot/keyboards.py`: `f'stop:{project_id}'`
+- `bot/keyboards.py`: `f'instagram:{project_id}'`
+- `bot/keyboards.py`: `f'aitoggle:{project_id}'`
+- `bot/keyboards.py`: `f'aicycletone:{project_id}'`
+- `bot/keyboards.py`: `f'aicyclelength:{project_id}'`
+- `bot/keyboards.py`: `f'aicyclelang:{project_id}'`
+- `bot/keyboards.py`: `f'aitoggleurls:{project_id}'`
+- `bot/keyboards.py`: `f'aitogglehashtags:{project_id}'`
+- `bot/keyboards.py`: `f'aitogglecta:{project_id}'`
+- `bot/keyboards.py`: `f'aitogglespam:{project_id}'`
+- `bot/keyboards.py`: `f'aiprompt:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'wmtoggle:{project_id}'`
+- `bot/keyboards.py`: `f'wmcycletype:{project_id}'`
+- `bot/keyboards.py`: `f'wmsettext:{project_id}'`
+- `bot/keyboards.py`: `f'wmcyclepos:{project_id}'`
+- `bot/keyboards.py`: `f'wmcyclesize:{project_id}'`
+- `bot/keyboards.py`: `f'wmcycleopacity:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'afftogglemain:{project_id}'`
+- `bot/keyboards.py`: `f'afftoggleamazon:{project_id}'`
+- `bot/keyboards.py`: `f'afftoggleflipkart:{project_id}'`
+- `bot/keyboards.py`: `f'afftogglemmeesho:{project_id}'`
+- `bot/keyboards.py`: `f'afftogglewishlink:{project_id}'`
+- `bot/keyboards.py`: `f'afftogglevarearnkaro:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f"sourceitem:{s['id']}:{project_id}"`
+- `bot/keyboards.py`: `f'source:{project_id}'`
+- `bot/keyboards.py`: `f"destitem:{d['id']}:{project_id}"`
+- `bot/keyboards.py`: `f'destination:{project_id}'`
+- `bot/keyboards.py`: `f'togglesource:{source_id}:{project_id}'`
+- `bot/keyboards.py`: `f'deletesourceconfirm:{source_id}:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'listsource:{project_id}'`
+- `bot/keyboards.py`: `f'toggledestination:{destination_id}:{project_id}'`
+- `bot/keyboards.py`: `f'deletedestinationconfirm:{destination_id}:{project_id}'`
+- `bot/keyboards.py`: `f'testdestination:{destination_id}:{project_id}'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'listdestination:{project_id}'`
+- `bot/keyboards.py`: `confirm_action`
+- `bot/keyboards.py`: `back_action`
+- `bot/keyboards.py`: `f'togglemode:{project_id}'`
+- `bot/keyboards.py`: `f'togglesilent:{project_id}'`
+- `bot/keyboards.py`: `f'toggleprotect:{project_id}'`
+- `bot/keyboards.py`: `f'togglealbum:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'setwhitelist:{project_id}'`
+- `bot/keyboards.py`: `f'setblacklist:{project_id}'`
+- `bot/keyboards.py`: `f'projfilters:{project_id}'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:domain_whitelist'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:domain_blacklist'`
+- `bot/keyboards.py`: `f'projfilters:{project_id}'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:sender_whitelist'`
+- `bot/keyboards.py`: `f'crfield:{project_id}:sender_blacklist'`
+- `bot/keyboards.py`: `f'crlogic:{project_id}'`
+- `bot/keyboards.py`: `f'projfilters:{project_id}'`
+- `bot/keyboards.py`: `f'fmtprefixsuffix:{project_id}'`
+- `bot/keyboards.py`: `f'fmtreplace:{project_id}'`
+- `bot/keyboards.py`: `f'fmtremove:{project_id}'`
+- `bot/keyboards.py`: `f'editproj:{project_id}'`
+- `bot/keyboards.py`: `f'fmtfield:{project_id}:prefix'`
+- `bot/keyboards.py`: `f'fmtfield:{project_id}:suffix'`
+- `bot/keyboards.py`: `f'fmtreplace:{project_id}'`
+- `bot/keyboards.py`: `f'fmtremove:{project_id}'`
+- `bot/keyboards.py`: `f'fmtroot:{project_id}'`
+- `bot/keyboards.py`: `f'fmtreplacedel:{project_id}:{i}'`
+- `bot/keyboards.py`: `f'fmtremovedel:{project_id}:{i}'`
+- `bot/keyboards.py`: `'acct:connections'`
+- `bot/keyboards.py`: `'pay:method'`
+- `bot/keyboards.py`: `'acct:wallet'`
+- `bot/keyboards.py`: `'acct:payhistory'`
+- `bot/keyboards.py`: `'settings:togglerenew'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `'wallet:topup'`
+- `bot/keyboards.py`: `'wallet:redeem'`
+- `bot/keyboards.py`: `'acct:wallethistory'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `'acct:noop'`
+- `bot/keyboards.py`: `'settings:disconnect'`
+- `bot/keyboards.py`: `'pacct:list'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `f'pacct:reconnect:{account_id}'`
+- `bot/keyboards.py`: `'noop'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `'nav:account'`
+- `bot/keyboards.py`: `'acct:plan'`
+- `bot/keyboards.py`: `'acct:connections'`
+- `bot/keyboards.py`: `'settings:language'`
+- `bot/keyboards.py`: `'settings:togglerenew'`
+- `bot/keyboards.py`: `'settings:notifications'`
+- `bot/keyboards.py`: `'settings:systatus'`
+- `bot/keyboards.py`: `'nav:help'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `'support:owner'`
+- `bot/keyboards.py`: `'help:faq'`
+- `bot/keyboards.py`: `'help:guide'`
+- `bot/keyboards.py`: `'help:tour'`
+- `bot/keyboards.py`: `'support:list'`
+- `bot/keyboards.py`: `'support:new'`
+- `bot/keyboards.py`: `'help:feedback'`
+- `bot/keyboards.py`: `'nav:home'`
+- `bot/keyboards.py`: `f'support:cat:{cat}'`
+- `bot/keyboards.py`: `f'support:reply:{ticket_id}'`
+- `bot/keyboards.py`: `f'support:close:{ticket_id}'`
+- `bot/keyboards.py`: `f'support:reopen:{ticket_id}'`
+- `bot/keyboards.py`: `'pay:plans:upi'`
+- `bot/keyboards.py`: `'pay:plans:crypto'`
+- `bot/keyboards.py`: `'noop'`
+- `bot/keyboards.py`: `f'pay:durations:{method}:{plan}'`
+- `bot/keyboards.py`: `f'pay:create:{method}:{plan}:{months}'`
+- `bot/keyboards.py`: `f'pay:status:{request_id}'`
+- `bot/keyboards.py`: `f'pay:cancel:{request_id}'`
+- `bot/keyboards.py`: `f'upgrade:verify:{request_id}'`
+- `bot/keyboards.py`: `f'upgrade:cancel:{request_id}'`
+- `bot/keyboards.py`: `'nav:projects'`
+- `bot/keyboards.py`: `'acct:plan'`
+- `bot/keyboards.py`: `'pay:method'`
+- `bot/keyboards.py`: `'help:support'`
+- `bot/keyboards.py`: `'platform:whatsapp_channel'`
+- `bot/keyboards.py`: `'platform:locked'`
+- `bot/keyboards.py`: `'platform:threads'`
+- `bot/keyboards.py`: `'platform:locked'`
+- `bot/keyboards.py`: `f"igdestination:{dest['id']}"`
+- `bot/keyboards.py`: `f'igtargettype:{project_id}:broadcast_channel'`
+- `bot/keyboards.py`: `f'igtargettype:{project_id}:feed'`
+- `bot/keyboards.py`: `f'instagram:{project_id}'`
+- `bot/keyboards.py`: `f'igjobdone:{job_id}:{project_id}:{offset}'`
+- `bot/keyboards.py`: `f'igjobskip:{job_id}:{project_id}:{offset}'`
+- `bot/keyboards.py`: `f'instagram:{project_id}'`
+- `bot/keyboards.py`: `cb`
+- `bot/keyboards.py`: `f'wacode:list:{platform}'`
+- `bot/keyboards.py`: `f"pacct:view:{a['id']}"`
+
+## Services
+- `services/affiliate_service.py`: ensure_affiliate_settings, update_affiliate_settings, _build_affiliate_url, _replace_affiliate_urls, replace_affiliate_links, is_affiliate_url, get_supported_providers
+- `services/ai_service.py`: _column_exists, ensure_ai_settings, update_ai_settings, _build_prompt, _extract_urls, _restore_urls, _validate_output, _log_usage, check_user_rate_limit, rewrite_content, get_ai_stats_today
+- `services/app_config.py`: _ensure_schema, get, get_bool, set
+- `services/audit_service.py`: is_owner, is_admin, get_permissions, has_permission, require_permission, can, gate, add_admin, remove_admin, set_admin_active, set_permission, list_admins, log_action, query_audit_logs
+- `services/content_rules_service.py`: get_rules, update_rules, clear_rules, _csv_list, _extract_hashtags, _extract_domains, passes_content_rules
+- `services/coupon_service.py`: generate_code, create_coupon, get_coupon, get_coupon_by_code, list_coupons, deactivate_coupon, validate, record_redemption, release_redemption
+- `services/crypto_provider.py`: get_provider
+- `services/dedup_service.py`: compute_content_hash, _identity_key, claim, confirm, release, cleanup_expired_claims, get_duplicate_count_today, was_forwarded
+- `services/destination_service.py`: _pairing_hmac_secret, sign_pairing_code, verify_pairing_signature, _generate_unique_pairing_code, add_destination, set_destination_pairing, update_pairing_status, _row_to_dict, get_destination_by_pairing_code, verify_pairing_code, mark_pairing_failed, mark_pairing_expired, cleanup_expired_pairings, get_destination, get_destinations, delete_destination, get_destination_chat_ids, toggle_destination_enabled, get_enabled_destination_chat_ids, count_destinations
+- `services/formatting_service.py`: get_rules, set_prefix, set_suffix, add_replace_rule, remove_replace_rule, get_replace_rules, add_remove_pattern, remove_remove_pattern, get_remove_patterns, clear_rules, _update, _protect_urls, _restore_urls, apply_formatting
+- `services/giveaway_service.py`: _rand_code, create_giveaway, get_giveaway, list_giveaways, cancel_giveaway, get_winners, get_eligible_users, select_winners, deliver_rewards
+- `services/i18n.py`: 
+- `services/i18n_service.py`: get_user_language, set_user_language, t, invalidate_cache
+- `services/instagram_service.py`: add_instagram_destination, get_instagram_destinations, get_instagram_destination, delete_instagram_destination, set_destination_status, get_format_settings, update_format_settings, format_for_instagram
+- `services/job_queue.py`: enqueue, claim_next, complete, fail, _move_to_dead_letter, retry_dead_letter, recover_stuck_jobs, get_queue_stats
+- `services/knowledge_service.py`: list_articles, get_article
+- `services/log_service.py`: add_log, get_logs, clear_logs
+- `services/notification_service.py`: _ensure, get_prefs, set_pref, is_enabled
+- `services/payment_service.py`: is_oxapay_configured, is_upi_configured, get_available_methods, create_oxapay_invoice, _column_exists, create_crypto_payment, create_stars_payment, check_crypto_payment, _mark_status, _activate_plan_purchase, approve_crypto_payment, create_payment_request, create_wallet_topup_request, get_payment_request, submit_screenshot, cancel_payment_request, approve_payment, reject_payment, expire_stale_requests
+- `services/plan_service.py`: _get_plan_config, _get_all_plan_configs, get_cached_plan_configs, invalidate_plan_configs_cache, get_user_plan, set_user_plan, extend_plan, start_trial, get_entitlements, requires_attribution, has_feature, get_plan_display_name, get_plan_monthly_price_inr, get_plan_crypto_price_usd, get_plan_stars_price, can_create_project, can_add_source, can_add_destination, can_add_middle_destination, within_daily_forward_limit, reserve_daily_forward, release_daily_forward, get_global_daily_forward_limit, within_global_daily_forward_limit, get_plan_limits, get_project_daily_usage
+- `services/platform_accounts_service.py`: upsert_account, get_accounts, get_account, get_credentials, remove_account, set_health, whatsapp_validate_and_store, whatsapp_list_channels, threads_validate_and_store, threads_get_token, _threads_refresh_sync
+- `services/platform_registry.py`: _instagram_status, _whatsapp_status, _threads_status, get_platforms, get_platform, is_selectable
+- `services/pricing_service.py`: get_duration_options, calculate_price, format_duration_label, calculate_crypto_price, get_crypto_discount_for_duration, format_crypto_label, set_duration, get_plan_pricing_summary
+- `services/processing_service.py`: extract_urls, create_job, set_status, record_attempt, should_retry, get_job, get_approval_queue, get_retryable_jobs, get_project_job_counts
+- `services/project_service.py`: create_project, get_projects, get_all_projects, get_project, rename_project, update_status, set_platform_type, set_processing_channel, set_promo_enabled, delete_project, count_projects, project_exists
+- `services/promo_service.py`: create_promo_post, set_post_status, record_delivery, get_delivery_report, get_recent_promo_posts
+- `services/referral_service.py`: build_referral_code, parse_referral_code, capture_referral, grant_reward_if_pending, get_referral_stats, get_referral_leaderboard, get_milestone_progress, check_and_grant_milestones
+- `services/settings_service.py`: get_settings, update_settings, toggle_mode, toggle_flag, set_delay, set_media_filter, set_keyword_whitelist, set_keyword_blacklist, set_regex_filter
+- `services/source_health.py`: check_source_health, check_all_sources_health, notify_unhealthy_sources, record_source_health, get_source_health_history
+- `services/source_service.py`: add_source, get_sources, get_source, delete_source, get_source_chat_ids, toggle_source_enabled, get_enabled_source_chat_ids, count_sources
+- `services/stats_service.py`: _ensure_row, get_stats, increment, global_stats
+- `services/support_ai_service.py`: _get_openrouter_key, _get_support_ai_model, _get_fallback_models, _get_openrouter_key, _get_openrouter_key, _get_support_ai_model, _get_fallback_models, _get_openrouter_key, _build_support_system_prompt, _get_user_context, _check_rate_limit, _record_usage, _get_chat_session, _add_message_to_session, _get_session_messages, _call_openrouter, get_support_ai_response, clear_chat_history, get_chat_history, get_usage_stats
+- `services/support_service.py`: create_ticket, get_ticket, get_messages, list_user_tickets, list_tickets_by_status, add_message, _apply_status, set_status, assign, open_count
+- `services/text_replacement_service.py`: get_replace_rules, add_replace_rule, remove_replace_rule, clear_replace_rules, _update_replace_rules, apply_text_replacement, set_prefix, set_suffix
+- `services/wallet_service.py`: _ensure_user, get_balance_inr, get_balance_usd, get_wallet_currency, set_wallet_currency, credit, debit, credit_currency, debit_currency, _balance_of, charge_forward, reserve_forward_charge, confirm_forward_charge, release_forward_charge, get_transactions, set_auto_renew, is_auto_renew_enabled
+- `services/watermark_service.py`: ensure_watermark_settings, update_watermark_settings, save_logo, _calculate_position, _apply_text_watermark, _apply_logo_watermark, apply_watermark
+- `services/whatsapp_content.py`: _html_to_whatsapp, _markdown_to_whatsapp, _telegram_to_whatsapp, _clean_whatsapp_text, _truncate_whatsapp_text, convert_telegram_to_whatsapp, prepare_whatsapp_content, extract_media_from_telegram_message, split_long_whatsapp_text
+- `services/whatsapp_pairing.py`: _now, _advance_session_state, get_next_session_state, _get_cur_conn, _close_cur_conn, generate_pairing_code, validate_pairing_code, mark_code_used, get_user_pending_codes, can_create_pairing_code, get_user_pending_codes, set_destination_session_state, get_destination_session_state, get_destination_pairing_status, advance_destination_session_state, reset_destination_to_idle, is_destination_active, is_destination_ready, is_destination_paired
+
+## Tables
+- whatsapp_pairing_codes
+- users
+- projects
+- sources
+- destinations
+- platform_accounts
+- project_affiliate_settings
+- project_ai_settings
+- ai_usage
+- project_watermark_settings
+- message_deduplication
+- jobs
+- dead_letter_jobs
+- project_settings
+- logs
+- stats
+- instagram_destinations
+- instagram_format_settings
+- processing_jobs
+- publish_logs
+- promotional_posts
+- promotional_deliveries
+- reminder_log
+- content_rules
+- formatting_rules
+- daily_usage
+- user_telegram_sessions
+- referrals
+- referral_milestones
+- referral_milestone_grants
+- payment_requests
+- wallet_transactions
+- plan_configs
+- plan_durations
+- feature_requests
+- admins
+- admin_permissions
+- admin_audit_logs
+- coupons
+- coupon_redemptions
+- giveaways
+- giveaway_winners
+- support_tickets
+- support_messages
+- knowledge_articles
+- feature_flags
+- platform_status
+- translations
+- user_notification_prefs
+- support_ai_sessions
+- support_ai_messages
+
+## Imported roots
+Crypto, PIL, aiohttp, asyncio, base64, bot, config, core, database, dataclasses, datetime, destinations, dotenv, hashlib, hmac, html, httpx, i18n_service, io, json, logging, math, os, pathlib, random, re, secrets, services, sqlite3, string, subprocess, sys, telegram, telethon, tempfile, threading, time, typing, urllib, uuid, warnings
+
+## Parse errors
+[]
