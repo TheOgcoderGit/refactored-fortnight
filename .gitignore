@@ -14,3 +14,6 @@ __pycache__/
 venv/
 .venv/
 env/
+
+# Build artifacts handed to testers
+*.zip
