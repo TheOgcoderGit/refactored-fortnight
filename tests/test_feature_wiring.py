@@ -76,6 +76,12 @@ class FeatureWiringTests(DatabaseCase, unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         super().setUp()
         self.rendered = []
+        # DatabaseCase seeds projects 10/11 (user 1) and 20 (user 2) plus
+        # destinations 100/101 for project 10, but no sources - several
+        # screens and the stale-button regressions need one.
+        if not self.sql("SELECT id FROM sources WHERE project_id=?", (PROJECT_ID,)):
+            self.sql("INSERT INTO sources(id, project_id, chat_id, title) "
+                     "VALUES(1, ?, '-90001', 'Test Source')", (PROJECT_ID,))
 
     def new_query(self, data=""):
         q = FakeQuery(self.rendered)
@@ -321,6 +327,99 @@ class FeatureWiringTests(DatabaseCase, unittest.IsolatedAsyncioTestCase):
         handled, query = await self.press_nav("wallet:redeem")
         self.assertTrue(handled)
         self.assertRendered(query, "coupon")
+
+    # ------------------------------------------------------------------
+    # regressions found by tools_dead_buttons.py
+    # ------------------------------------------------------------------
+
+    async def test_language_button_applies_the_language(self):
+        from services import i18n_service
+        handled, query = await self.press_nav("lang:hi")
+        self.assertTrue(handled)
+        self.assertEqual(i18n_service.get_user_language(USER_ID), "hi")
+
+        await self.press_nav("lang:en")
+        self.assertEqual(i18n_service.get_user_language(USER_ID), "en")
+
+    async def test_unknown_language_is_rejected_not_silently_applied(self):
+        from services import i18n_service
+        before = i18n_service.get_user_language(USER_ID)
+        await self.press_nav("lang:klingon")
+        self.assertEqual(i18n_service.get_user_language(USER_ID), before)
+
+    async def test_support_ai_button_arms_the_assistant(self):
+        from bot import handlers_admin
+        query = self.new_query("sup:ai_start")
+        handled = await handlers_admin.handle_callbacks(
+            query, USER_ID, "sup", ["sup", "ai_start"], None)
+        self.assertTrue(handled)
+        self.assertTrue(handlers_admin.WAITING_AI_SUPPORT.get(USER_ID))
+        self.assertRendered(query, "Ask me anything")
+        handlers_admin.WAITING_AI_SUPPORT.pop(USER_ID, None)
+
+    async def test_support_faq_button_renders(self):
+        from bot import handlers_admin
+        query = self.new_query("sup:faq")
+        handled = await handlers_admin.handle_callbacks(
+            query, USER_ID, "sup", ["sup", "faq"], None)
+        self.assertTrue(handled)
+        self.assertRendered(query)
+
+    async def test_help_screen_tickets_use_live_actions(self):
+        """The Help screen used to emit support:list / support:new, which no
+        handler owns. It must point at the live sup:* ticket actions."""
+        handled, query = await self.press_nav("nav:help")
+        self.assertTrue(handled)
+        markup = self.rendered[-1][2]
+        emitted = {b.callback_data for row in markup.inline_keyboard for b in row}
+        self.assertIn("sup:tickets", emitted)
+        self.assertIn("sup:new_start", emitted)
+        self.assertNotIn("support:list", emitted)
+
+    async def test_locked_ai_screen_routes_to_plans(self):
+        """'View plans' on the plan-gated AI screen was pay:method, which
+        nothing handles - Free-plan users hit a dead button."""
+        from bot import handlers_features
+        from core.forwarder import force_refresh_routes
+        query = self.new_query(f"ai:hub:{PROJECT_ID}")
+        await handlers_features.handle_callbacks(
+            query, USER_ID, "ai", ["ai", "hub", str(PROJECT_ID)], None)
+
+        markup = self.rendered[-1][2]
+        emitted = {b.callback_data for row in markup.inline_keyboard for b in row}
+        if "💳 View plans" in str(self.rendered[-1][1]):
+            self.assertNotIn("pay:method", emitted)
+            self.assertIn("nav:plans", emitted)
+
+    async def test_toggling_a_deleted_source_does_not_crash(self):
+        """A stale Enable/Disable button on an old message used to raise
+        TypeError on None instead of telling the user it is gone."""
+        from services import source_service
+        source_id = self.sql("SELECT id FROM sources WHERE project_id=?",
+                             (PROJECT_ID,))[0]["id"]
+        source_service.delete_source(source_id)
+
+        query = self.new_query(f"src:toggle:{source_id}:{PROJECT_ID}")
+        handled = await handlers_projects.handle_callbacks(
+            query, USER_ID, "src",
+            ["src", "toggle", str(source_id), str(PROJECT_ID)], None)
+        self.assertTrue(handled)
+        self.assertTrue(query.answer.await_count >= 1)
+
+    async def test_other_users_source_toggle_is_ignored(self):
+        source_id = self.sql("SELECT id FROM sources WHERE project_id=?",
+                             (PROJECT_ID,))[0]["id"]
+        before = self.sql("SELECT enabled FROM sources WHERE id=?", (source_id,))[0]["enabled"]
+        query = self.new_query(f"src:toggle:{source_id}:{PROJECT_ID}")
+        await handlers_projects.handle_callbacks(
+            query, 999, "src",
+            ["src", "toggle", str(source_id), str(PROJECT_ID)], None)
+
+        # Handlers claim the callback (True) but must not act, and must not
+        # render another user's project data.
+        self.assertEqual(self.rendered, [])
+        after = self.sql("SELECT enabled FROM sources WHERE id=?", (source_id,))[0]["enabled"]
+        self.assertEqual(before, after)
 
     # ------------------------------------------------------------------
     # reply-keyboard menu labels

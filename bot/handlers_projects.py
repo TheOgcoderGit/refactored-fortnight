@@ -429,6 +429,16 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
 
     if action == "src" and parts[1] == "toggle":
         sid, pid = int(parts[2]), int(parts[3])
+        p = get_project(pid)
+        if not p or (p["user_id"] != user_id and user_id not in ADMIN_IDS):
+            return True
+        s = get_source(sid)
+        if not s or s["project_id"] != pid:
+            # Stale button: the source was removed after this message was
+            # rendered. Say so instead of raising on None.
+            await query.answer("That source no longer exists.", show_alert=True)
+            query.data = f"src:list:{pid}"
+            return await handle_callbacks(query, user_id, "src", ["src", "list", str(pid)], context)
         toggle_source_enabled(sid)
         await force_refresh_routes()
         s = get_source(sid)
@@ -522,6 +532,16 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
 
     if action == "tgt" and parts[1] == "toggle":
         did, pid = int(parts[2]), int(parts[3])
+        p = get_project(pid)
+        if not p or (p["user_id"] != user_id and user_id not in ADMIN_IDS):
+            return True
+        d = get_destination(did)
+        if not d or d["project_id"] != pid:
+            # Stale button: the target was removed after this message was
+            # rendered. Say so instead of raising on None.
+            await query.answer("That target no longer exists.", show_alert=True)
+            query.data = f"tgt:list:{pid}"
+            return await handle_callbacks(query, user_id, "tgt", ["tgt", "list", str(pid)], context)
         toggle_destination_enabled(did)
         await force_refresh_routes()
         d = get_destination(did)

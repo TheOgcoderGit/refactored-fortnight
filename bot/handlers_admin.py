@@ -240,6 +240,27 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
         await query.message.reply_text("Send ticket subject:")
         return True
 
+    if action == "sup" and parts[1] == "ai_start":
+        # Arms the AI assistant. handlers_admin.handle_text picks up the next
+        # free-text message, answers the common questions from the canned set
+        # and falls through to Gemini for everything else.
+        WAITING_AI_SUPPORT[user_id] = True
+        await query.message.reply_text(
+            "🤖 Ask me anything about ChannelFlow — setup, sources and "
+            "targets, plans, filters, affiliate links or billing.\n\n"
+            "Type your question as a normal message.")
+        return True
+
+    if action == "sup" and parts[1] == "faq":
+        from bot import handlers_nav
+        handled = await handlers_nav.handle_callbacks(
+            query, user_id, "help", ["help", "faq"], context)
+        if not handled:
+            await query.message.reply_text(
+                "🔎 The FAQ is not available right now. "
+                "Ask the AI assistant instead.")
+        return True
+
     # Point 4: Creator Plan Gating for Owner Contact
     if action == "sup" and parts[1] == "owner":
         ent = plan_service.get_entitlements(user_id)

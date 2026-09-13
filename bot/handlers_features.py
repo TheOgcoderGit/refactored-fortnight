@@ -569,7 +569,7 @@ async def _render_ai(query, user_id, project_id):
             "Upgrade from 💳 Subscription to switch it on."
         )
         await _edit(query, text, InlineKeyboardMarkup([
-            [InlineKeyboardButton("💳 View plans", callback_data="pay:method")],
+            [InlineKeyboardButton("💳 View plans", callback_data="nav:plans")],
             _back_row(project_id),
         ]))
         return

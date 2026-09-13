@@ -113,6 +113,32 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     parts = data.split(":")
     action = parts[0]
 
+    try:
+        await dispatch_callback(query, user_id, action, parts, context, update=update)
+    except Exception:
+        # A stale or malformed callback (deleted project, hand-edited data,
+        # an old keyboard still on screen) used to escape here and die, so
+        # the button just looked dead. Fail loudly in the logs, gently to
+        # the user.
+        logger.exception("Callback failed for %r (user %s)", data, user_id)
+        try:
+            await query.answer("That action is no longer available.",
+                               show_alert=True)
+        except Exception:
+            pass
+
+
+async def dispatch_callback(query, user_id: int, action: str, parts: list,
+                            context: ContextTypes.DEFAULT_TYPE,
+                            update=None) -> bool:
+    """Routes a callback to whichever handler module owns it.
+
+    Split out of button_handler so the dispatch table can be exercised
+    directly - tools_dead_buttons.py presses every callback_data the UI can
+    produce through this one function, which is what catches dead buttons
+    and stale-state crashes before users do.
+    """
+
     # Universal Home Action (Works from everywhere)
     if action == "nav" and len(parts) > 1 and parts[1] == "home":
         from bot.handlers_onboard import connected_home_keyboard, disconnected_home_keyboard, returning_unconnected_keyboard, welcome_keyboard, get_user_lang
@@ -141,55 +167,60 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 try: await query.edit_message_text("🎉 Welcome to ChannelFlow AI!", reply_markup=welcome_keyboard())
                 except BadRequest: pass
-        return
+        return True
 
     # Delegate in order
     if hasattr(handlers_onboard, "handle_callbacks") and await handlers_onboard.handle_callbacks(query, user_id, action, parts, context):
-        return
+        return True
     # Navigation / Account / Settings / Help screens.
     if await handlers_nav.handle_callbacks(query, user_id, action, parts, context):
-        return
+        return True
     if hasattr(handlers_projects, "handle_callbacks") and await handlers_projects.handle_callbacks(query, user_id, action, parts, context):
-        return
+        return True
     if hasattr(handlers_billing, "handle_callbacks") and await handlers_billing.handle_callbacks(query, user_id, action, parts, context):
-        return
+        return True
     if hasattr(handlers_admin, "handle_callbacks") and await handlers_admin.handle_callbacks(query, user_id, action, parts, context):
-        return
+        return True
 
     # Full admin console (bot/admin_panel.py). It owns every "adm:*" screen
     # that handlers_admin does not answer itself. It was never registered
     # before, so the whole admin console - finance, coupons, giveaways,
     # support inbox, analytics, system, audit, platform toggles - was dead UI.
     if action == "adm":
+        if update is None:
+            # Nothing to hand to python-telegram-bot's own dispatcher.
+            return True
         try:
             from bot.admin_panel import admin_callback
             await admin_callback(update, context)
         except Exception:
-            logger.exception("Admin panel callback failed for %s", data)
+            logger.exception("Admin panel callback failed for %s", query.data)
             try:
                 await query.answer("Admin panel is unavailable right now.", show_alert=True)
             except Exception:
                 pass
-        return
+        return True
 
     # Direct Navigation Subsections
-    if action == "nav":
+    if action == "nav" and len(parts) > 1:
         sub = parts[1]
         if sub == "projects" and hasattr(handlers_projects, "render_projects_view"):
             await handlers_projects.render_projects_view(query.message, user_id)
-            return
+            return True
         if sub == "plans" and hasattr(handlers_billing, "render_plans_view"):
             await handlers_billing.render_plans_view(query.message, user_id)
-            return
+            return True
         if sub == "earn" and hasattr(handlers_billing, "render_earn_view"):
             await handlers_billing.render_earn_view(query.message, user_id)
-            return
+            return True
         if sub == "account" and hasattr(handlers_onboard, "render_account_view"):
             await handlers_onboard.render_account_view(query.message, query.from_user)
-            return
+            return True
         if sub == "support" and hasattr(handlers_admin, "render_support_view"):
             await handlers_admin.render_support_view(query.message, user_id)
-            return
+            return True
+
+    return False
 
 
 # Master Text Message Router

@@ -315,8 +315,11 @@ async def _render_help(query, user_id):
                      InlineKeyboardButton("📖 Guide", callback_data="help:guide")],
                     [InlineKeyboardButton("🎯 Bot Tour", callback_data="help:tour"),
                      InlineKeyboardButton("💡 Feature Request", callback_data="help:feedback")],
-                    [InlineKeyboardButton("🎫 My Tickets", callback_data="support:list"),
-                     InlineKeyboardButton("💬 New Ticket", callback_data="support:new")],
+                    # sup:tickets / sup:new_start are the live ticket actions
+                    # (bot/handlers_admin.py). The support:* family belongs to
+                    # unused keyboards in bot/keyboards.py and has no handler.
+                    [InlineKeyboardButton("🎫 My Tickets", callback_data="sup:tickets"),
+                     InlineKeyboardButton("💬 New Ticket", callback_data="sup:new_start")],
                     [InlineKeyboardButton("🆘 Support Centre", callback_data="nav:support")],
                     _home_row(),
                 ]))
@@ -414,6 +417,19 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
             await handlers_admin.render_support_view(query.message, user_id)
             return True
         return False
+
+    # ---------------- language ----------------
+    if action == "lang":
+        from services import i18n_service
+        code = (sub or "").lower()
+        if code not in i18n_service.LANGUAGES:
+            await query.answer("That language isn't available yet.", show_alert=True)
+            return True
+        i18n_service.set_user_language(user_id, code)
+        name = i18n_service.LANGUAGES[code]
+        await query.answer(f"Language set to {name}.")
+        await _render_settings(query, user_id)
+        return True
 
     # ---------------- settings ----------------
     if action == "settings":

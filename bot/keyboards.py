@@ -77,6 +77,8 @@ def projects_section_keyboard(projects, can_create=True):
 
 
 def project_actions_keyboard(project_id, running=None, platform_type=None):
+    # platform_type is kept for call-site compatibility; the Instagram
+    # pipeline it used to switch on was removed (PRD section 2).
     """Compact per-project view (Prompt 3 section 5): edit/status/
     start-pause/delete + back. Contextual start/pause via ``running``."""
 
@@ -90,12 +92,6 @@ def project_actions_keyboard(project_id, running=None, platform_type=None):
             InlineKeyboardButton("⏸ Pause", callback_data=f"stop:{project_id}"),
         ]
 
-    instagram_row = (
-        [InlineKeyboardButton("📸 Instagram", callback_data=f"instagram:{project_id}")]
-        if platform_type in ("instagram_broadcast", "both")
-        else None
-    )
-
     rows = [
         [
             InlineKeyboardButton("⚙️ Edit Project", callback_data=f"editproj:{project_id}"),
@@ -107,9 +103,6 @@ def project_actions_keyboard(project_id, running=None, platform_type=None):
         ],
     ]
 
-    if instagram_row:
-        rows.append(instagram_row)
-
     rows.append([
         InlineKeyboardButton("🏠 Home", callback_data="nav:home"),
         InlineKeyboardButton("⬅ Back to Projects", callback_data="nav:projects"),
@@ -119,6 +112,8 @@ def project_actions_keyboard(project_id, running=None, platform_type=None):
 
 
 def edit_project_keyboard(project_id, platform_type=None):
+    # platform_type is kept for call-site compatibility; the Instagram
+    # pipeline it used to switch on was removed (PRD section 2).
     """Categorized project management (Prompt 3 section 6). Each row is
     its own submenu; nothing else leaks onto this screen."""
 
@@ -139,9 +134,6 @@ def edit_project_keyboard(project_id, platform_type=None):
             InlineKeyboardButton("📊 Analytics", callback_data=f"stats:{project_id}"),
         ],
     ]
-
-    if platform_type in ("instagram_broadcast", "both"):
-        rows.append([InlineKeyboardButton("📸 Instagram Pipeline", callback_data=f"instagram:{project_id}")])
 
     rows += [
         [
@@ -230,9 +222,9 @@ def affiliate_settings_keyboard(project_id, settings):
         [InlineKeyboardButton(f"Affiliate Tools: {status_icon}", callback_data=f"afftogglemain:{project_id}")],
         [InlineKeyboardButton(f"📦 Amazon {'🟡 On' if settings.get('amazon_enabled') else '🔴 Off'}", callback_data=f"afftoggleamazon:{project_id}")],
         [InlineKeyboardButton(f"🛒 Flipkart {'🟡 On' if settings.get('flipkart_enabled') else '🔴 Off'}", callback_data=f"afftoggleflipkart:{project_id}")],
-        [InlineKeyboardButton(f"🧘 Meesho {'🟡 On' if settings.get('meesho_enabled') else '🔴 Off'}", callback_data=f"afftogglemmeesho:{project_id}")],
+        [InlineKeyboardButton(f"🧘 Meesho {'🟡 On' if settings.get('meesho_enabled') else '🔴 Off'}", callback_data=f"afftogglemeesho:{project_id}")],
         [InlineKeyboardButton(f"🌈 Wishlink {'🟡 On' if settings.get('wishlink_enabled') else '🔴 Off'}", callback_data=f"afftogglewishlink:{project_id}")],
-        [InlineKeyboardButton(f"💰 EarnKaro {'🟡 On' if settings.get('earnkaro_enabled') else '🔴 Off'}", callback_data=f"afftogglevarearnkaro:{project_id}")],
+        [InlineKeyboardButton(f"💰 EarnKaro {'🟡 On' if settings.get('earnkaro_enabled') else '🔴 Off'}", callback_data=f"afftoggleearnkaro:{project_id}")],
         [InlineKeyboardButton("⬅ Back to Edit", callback_data=f"editproj:{project_id}")],
     ])
 
@@ -970,76 +962,6 @@ def platform_selection_keyboard():
     rows.append([InlineKeyboardButton("📌 Telegram → Pinterest (Coming Soon)", callback_data="platform:locked")])
 
     return InlineKeyboardMarkup(rows)
-
-
-# ==========================================
-# INSTAGRAM / PROCESSING MANAGEMENT
-# ==========================================
-
-def instagram_management_keyboard(project_id, has_processing_channel, destinations):
-
-    buttons = []
-
-    buttons.append([
-        InlineKeyboardButton(
-            "🔗 Set Converter Output Channel" if not has_processing_channel else "🔄 Change Converter Output Channel",
-            callback_data=f"igsetprocessing:{project_id}",
-        )
-    ])
-
-    for dest in destinations:
-        label = dest["username"] or dest["ig_user_id"] or "Instagram destination"
-        status_icon = "🟢" if dest["status"] == "available" else "🟡"
-        buttons.append([
-            InlineKeyboardButton(
-                f"{status_icon} {label} ({dest['target_type']})",
-                callback_data=f"igdestination:{dest['id']}",
-            )
-        ])
-
-    buttons.append([
-        InlineKeyboardButton("➕ Add Instagram Destination", callback_data=f"igadddest:{project_id}")
-    ])
-
-    buttons.append([
-        InlineKeyboardButton("📋 Review Approval Queue", callback_data=f"igqueue:{project_id}:0")
-    ])
-
-    buttons.append([
-        InlineKeyboardButton("🎨 Caption Formatting", callback_data=f"igformat:{project_id}")
-    ])
-
-    buttons.append([
-        InlineKeyboardButton("⬅ Back to Project", callback_data=f"projcard:{project_id}")
-    ])
-
-    return InlineKeyboardMarkup(buttons)
-
-
-def instagram_destination_type_keyboard(project_id):
-
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton(
-            "📋 Broadcast Channel (approval queue)",
-            callback_data=f"igtargettype:{project_id}:broadcast_channel",
-        )],
-        [InlineKeyboardButton(
-            "📰 Regular Feed (auto-publish)",
-            callback_data=f"igtargettype:{project_id}:feed",
-        )],
-        [InlineKeyboardButton("❌ Cancel", callback_data=f"instagram:{project_id}")],
-    ])
-
-
-def approval_queue_item_keyboard(job_id, project_id, offset):
-
-    return InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ Mark Published", callback_data=f"igjobdone:{job_id}:{project_id}:{offset}"),
-            InlineKeyboardButton("⏭ Skip", callback_data=f"igjobskip:{job_id}:{project_id}:{offset}"),
-        ],
-        [InlineKeyboardButton("⬅ Back", callback_data=f"instagram:{project_id}")],
-    ])
 
 
 # Legacy alias used by older screens still referencing account_card_keyboard
