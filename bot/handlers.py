@@ -13,6 +13,7 @@ from bot import (
     handlers_projects,
     handlers_billing,
     handlers_admin,
+    handlers_status,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ connect_command = _find_fn(handlers_onboard, "connect_cmd", "connect_command", "
 admin_panel = _find_fn(handlers_admin, "admin_panel_cmd", "admin_panel", "admin_dashboard")
 owner_panel = _find_fn(handlers_admin, "owner_panel_cmd", "owner_panel")
 clones_command = _find_fn(handlers_admin, "clones_command", "render_clones_view")
+status_command = _find_fn(handlers_status, "status_cmd", "status_command", "status")
 
 owner_pannel = owner_panel
 admin_pannel = admin_panel

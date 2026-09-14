@@ -183,6 +183,111 @@ _STRINGS = {
         "ar": "حدث خطأ أثناء إعادة التوجيه. يرجى المحاولة مرة أخرى.",
         "id": "Terjadi kesalahan saat meneruskan. Silakan coba lagi.",
     },
+    # ------------------------------------------------------------------
+    # /status diagnostics screen.
+    # ------------------------------------------------------------------
+    "status.checking": {
+        "en": "🔍 Checking your setup…",
+        "hi": "🔍 आपकी सेटअप जाँची जा रही है…",
+    },
+    "status.title": {
+        "en": "ChannelFlow Status",
+        "hi": "ChannelFlow स्थिति",
+    },
+    "status.connected": {
+        "en": "✅ Telegram account connected",
+        "hi": "✅ Telegram अकाउंट कनेक्ट है",
+    },
+    "status.not_connected": {
+        "en": "⚠️ Account not connected — nothing is being forwarded",
+        "hi": "⚠️ अकाउंट कनेक्ट नहीं है — कुछ भी फ़ॉर्वर्ड नहीं हो रहा",
+    },
+    "status.plan": {
+        "en": "💎 Plan: {plan}",
+        "hi": "💎 प्लान: {plan}",
+    },
+    "status.plan.days": {
+        "en": "💎 Plan: {plan} — {days} day(s) left",
+        "hi": "💎 प्लान: {plan} — {days} दिन शेष",
+    },
+    "status.plan.expired": {
+        "en": "💎 Plan: expired — you are now on Free",
+        "hi": "💎 प्लान: समाप्त — अब आप Free पर हैं",
+    },
+    "status.projects": {
+        "en": "📁 Projects: {count}",
+        "hi": "📁 प्रोजेक्ट: {count}",
+    },
+    "status.project_active": {
+        "en": "🟢 Active",
+        "hi": "🟢 सक्रिय",
+    },
+    "status.project_paused": {
+        "en": "⏸ Paused",
+        "hi": "⏸ रोका गया",
+    },
+    "status.sources": {
+        "en": "Sources",
+        "hi": "सोर्स",
+    },
+    "status.targets": {
+        "en": "Targets",
+        "hi": "टार्गेट",
+    },
+    "status.none": {
+        "en": "— none yet",
+        "hi": "— अभी कोई नहीं",
+    },
+    "status.ok": {
+        "en": "✅ {name}",
+        "hi": "✅ {name}",
+    },
+    "status.bad": {
+        "en": "⚠️ {name} — {reason}",
+        "hi": "⚠️ {name} — {reason}",
+    },
+    "status.disabled": {
+        "en": "💤 {name} (disabled)",
+        "hi": "💤 {name} (बंद)",
+    },
+    "status.not_checked": {
+        "en": "— not checked (limit reached)",
+        "hi": "— जाँचा नहीं गया (सीमा पूरी)",
+    },
+    "status.needs_connection": {
+        "en": "    Connect your account to check these chats.",
+        "hi": "    इन चैट की जाँच के लिए अकाउंट कनेक्ट करें।",
+    },
+    "status.no_projects": {
+        "en": "You have no projects yet.",
+        "hi": "अभी आपका कोई प्रोजेक्ट नहीं है।",
+    },
+    "status.footer.problems": {
+        "en": ("{count} chat(s) need attention. Nothing forwards from a source "
+               "your account cannot read."),
+        "hi": ("{count} चैट पर ध्यान देने की ज़रूरत है। जिस सोर्स को आपका अकाउंट "
+               "पढ़ नहीं सकता, वहाँ से कुछ फ़ॉर्वर्ड नहीं होता।"),
+    },
+    "status.footer.ok": {
+        "en": "Everything I checked is reachable.",
+        "hi": "जो कुछ मैंने जाँचा, वह सब ठीक है।",
+    },
+    "status.btn.reconnect": {
+        "en": "🔄 Reconnect account",
+        "hi": "🔄 अकाउंट दोबारा कनेक्ट करें",
+    },
+    "status.btn.projects": {
+        "en": "📁 My Projects",
+        "hi": "📁 मेरे प्रोजेक्ट",
+    },
+    "status.btn.home": {
+        "en": "🏠 Home",
+        "hi": "🏠 होम",
+    },
+    "status.reason.not_configured": {
+        "en": "not configured",
+        "hi": "कॉन्फ़िगर नहीं",
+    },
 }
 
 _STRINGS.update(

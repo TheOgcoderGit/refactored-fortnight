@@ -45,6 +45,7 @@ from bot.handlers import (
     payments_command,
     walletadjust_command,
     format_command,
+    status_command,
     preview_command,
     credits_command,
     grantcredits_command,
@@ -154,6 +155,7 @@ app.add_handler(CommandHandler("start", start))
 app.add_handler(CommandHandler("cancel", cancel))
 app.add_handler(CommandHandler("connect", connect_command))
 app.add_handler(CommandHandler("format", format_command))
+app.add_handler(CommandHandler("status", status_command))
 app.add_handler(CommandHandler("preview", preview_command))
 app.add_handler(CommandHandler("credits", credits_command))
 app.add_handler(CommandHandler("grantcredits", grantcredits_command))
