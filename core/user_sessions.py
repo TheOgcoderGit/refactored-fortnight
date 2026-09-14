@@ -36,11 +36,11 @@ OTP_COMMAND_PREFIX = "FLOW"
 
 def extract_otp_from_command(text: str):
     if not text:
-        return False, "Message empty hai."
+        return False, "Message is empty."
 
     if not text.startswith(OTP_COMMAND_PREFIX):
         return False, (
-            f"Code is format me bhejein: {OTP_COMMAND_PREFIX}<code>\n"
+            f"Send the code in this format: {OTP_COMMAND_PREFIX}<code>\n"
             f"Example: {OTP_COMMAND_PREFIX}12345"
         )
 
@@ -133,7 +133,7 @@ async def start_connect(user_id: int, phone_number: str):
         raise ConnectError("Please use valid international format with country code (e.g. +919876543210).")
 
     if is_connected(user_id):
-        raise ConnectError("Aapka Telegram account pehle se connected hai.")
+        raise ConnectError("Your Telegram account is already connected.")
 
     now = time.monotonic()
     if now - _last_start.get(user_id, -1e10) < 15:
@@ -160,16 +160,18 @@ async def start_connect(user_id: int, phone_number: str):
 
     except PhoneNumberInvalidError:
         await client.disconnect()
-        raise ConnectError("Phone number invalid hai. Country code check karein (+91...).")
+        raise ConnectError("That phone number is not valid. Check the country "
+                        "code, e.g. +919876543210.")
     except PhoneNumberBannedError:
         await client.disconnect()
-        raise ConnectError("Telegram ne is number ko ban kiya hua hai.")
+        raise ConnectError("Telegram has banned this number.")
     except FloodWaitError as e:
         await client.disconnect()
         raise ConnectError(f"Telegram flood limit: please wait {e.seconds}s.")
     except Exception as e:
         await client.disconnect()
-        raise ConnectError(f"Code request nahi ho saka ({e}). Internet check karein.")
+        raise ConnectError(f"Could not request the code ({e}). Check your "
+                        "connection and try again.")
 
     _pending[user_id] = {
         "client": client,
@@ -188,14 +190,14 @@ async def start_connect(user_id: int, phone_number: str):
 async def submit_code(user_id: int, code: str):
     state = _pending.get(user_id)
     if state is None or state["stage"] != "code":
-        raise ConnectError("Koi active login session nahi mila. Pehle /connect karein.")
+        raise ConnectError("No active login session. Run /connect first.")
 
     if time.monotonic() - state["started_at"] > PENDING_TTL_SECONDS:
         await _drop_pending(user_id)
-        raise ConnectError("Session expire ho chuka hai. Dobara /connect karein.")
+        raise ConnectError("This login session has expired. Run /connect again.")
 
     if code in _submitted_codes.get(user_id, set()):
-        raise ConnectError("Yeh code pehle use ho chuka hai. Fresh code enter karein.")
+        raise ConnectError("That code has already been used. Enter the newest one.")
 
     client = state["client"]
 
@@ -216,14 +218,15 @@ async def submit_code(user_id: int, code: str):
         raise NeedsPassword()
     except PhoneCodeExpiredError:
         await _drop_pending(user_id)
-        raise ConnectError("Login code expire ho chuka hai. Dobara /connect karein.")
+        raise ConnectError("The login code has expired. Run /connect again.")
     except PhoneCodeInvalidError:
         _submitted_codes.setdefault(user_id, set()).add(code)
         state["attempts"] += 1
         if state["attempts"] >= MAX_ATTEMPTS:
             await _drop_pending(user_id)
-            raise ConnectError("Bohot baar galat code daala gaya. Dobara /connect se shuru karein.")
-        raise ConnectError(f"Galat code! Telegram me aaya hua fresh code bhejein: {OTP_COMMAND_PREFIX}<code>")
+            raise ConnectError("Too many wrong codes. Start again with /connect.")
+        raise ConnectError(f"Wrong code. Send the fresh one Telegram just sent: "
+        f"{OTP_COMMAND_PREFIX}<code>")
     except FloodWaitError as e:
         await _drop_pending(user_id)
         raise ConnectError(f"Telegram flood wait: {e.seconds}s.")
@@ -289,7 +292,7 @@ async def _finalize(user_id):
         logger.exception("Finalization failed for %s: %s", user_id, e)
         # Don't leak the raw exception (may contain internal/session
         # details) to the user - it's already logged above for debugging.
-        raise ConnectError("Finalization error. Dobara /connect karein.") from None
+        raise ConnectError("Could not finish the login. Run /connect again.") from None
     finally:
         await _drop_pending(user_id)
 

@@ -1,7 +1,9 @@
 # ChannelFlow AI - Master Onboarding, Auth & Account Handlers
 # ==========================================================
 
+import asyncio
 import logging
+import re
 from telegram import Update, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.error import BadRequest
 from telegram.ext import ContextTypes
@@ -269,28 +271,82 @@ async def connect_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 connect_command = connect_cmd
 
 
+# Telegram can take a while to answer a code request, and the client
+# retries on a weak connection. Without a ceiling the user sits staring
+# at "Requesting..." with no way to tell failure from slowness, so cap it
+# and say what happened.
+CONNECT_REQUEST_TIMEOUT = 60
+
+
+def normalise_phone(raw: str) -> str:
+    """Accept the ways people actually type a number.
+
+    "+91 98765 43210" is the same number as "+919876543210", and getting
+    it wrong here means the user is told their number is invalid when it
+    is not - and the flow ends there.
+    """
+    return re.sub(r"[\s\-()]", "", raw or "")
+
+
 async def initiate_phone_connect(message, user_id: int, phone: str):
+    phone = normalise_phone(phone)
     if not phone.startswith("+") or not phone[1:].isdigit():
-        await message.reply_text("❌ Include country code: e.g. +919876543210.")
+        await message.reply_text(
+            "❌ Include the country code, e.g. `+919876543210`.\n\n"
+            "Spaces and dashes are fine — I'll strip them out."
+        )
         return
 
     WAITING_CONNECT_PHONE.pop(user_id, None)
     await message.reply_text("⏳ Requesting verification code from Telegram...")
 
     try:
-        await user_sessions.start_connect(user_id, phone)
-        WAITING_CONNECT_STAGE[user_id] = "code"
-        await message.reply_text(
-            "🔑 **Enter Login OTP**\n\n"
-            "Telegram sent an official verification code to your Telegram app.\n\n"
-            "Send it in chat as:\n\n"
-            "`FLOW12345`\n\n"
-            "or:\n\n"
-            "`FLOW 12345`\n\n"
-            "⚠️ The **FLOW** prefix is required."
+        await asyncio.wait_for(
+            user_sessions.start_connect(user_id, phone),
+            timeout=CONNECT_REQUEST_TIMEOUT,
         )
+    except asyncio.TimeoutError:
+        await message.reply_text(
+            "⏳ Telegram didn't answer in "
+            f"{CONNECT_REQUEST_TIMEOUT} seconds.\n\n"
+            "This is usually a network problem on the bot's side. "
+            "Please wait a moment and send /connect to try again.",
+            reply_markup=(
+                connect_keyboard()
+            ),
+        )
+        return
     except user_sessions.ConnectError as e:
         await message.reply_text(f"❌ {e}")
+        return
+    except Exception as e:
+        # Anything else - most often SESSION_ENCRYPTION_KEY missing, or
+        # Telethon cannot reach Telegram at all - used to escape to the
+        # global error handler, which answers with a generic notice the
+        # user cannot act on. Say what went wrong instead.
+        logger.exception("start_connect failed for user %s", user_id)
+        await message.reply_text(
+            "❌ Could not request the login code.\n\n"
+            f"Reason: `{type(e).__name__}: {e}`\n\n"
+            "If this mentions SESSION_ENCRYPTION_KEY, the bot owner needs "
+            "to set it in .env before Telegram login can be used.\n"
+            "Otherwise it is usually connectivity - try /connect again.",
+            reply_markup=(
+                connect_keyboard()
+            ),
+        )
+        return
+
+    WAITING_CONNECT_STAGE[user_id] = "code"
+    await message.reply_text(
+        "🔑 **Enter Login OTP**\n\n"
+        "Telegram sent an official verification code to your Telegram app.\n\n"
+        "Send it in chat as:\n\n"
+        "`FLOW12345`\n\n"
+        "or:\n\n"
+        "`FLOW 12345`\n\n"
+        "⚠️ The **FLOW** prefix is required."
+    )
 
 
 async def render_account_view(message, user, edit: bool = False):
