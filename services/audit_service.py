@@ -49,11 +49,33 @@ DEFAULT_GRANTS = (
 
 
 def is_owner(admin_id) -> bool:
+    """True only for the platform owner.
+
+    The owner is identified by OWNER_ID (env). ADMIN_IDS is a *fallback*
+    used only when OWNER_ID is unset, which is what every pre-OWNER_ID
+    deployment relied on - but it must never be the primary test, because
+    then every administrator is also the owner and inherits the owner-only
+    console (which is exactly the bug this fixes).
+
+    bot/owner_panel.py gates on OWNER_ID directly; both now agree.
+    """
+
+    from config import OWNER_ID
+
+    if OWNER_ID is not None:
+        return admin_id == OWNER_ID
+
+    # No OWNER_ID configured: fall back to the legacy ADMIN_IDS list so an
+    # existing deployment is not locked out of its own console.
     return admin_id in ADMIN_IDS
 
 
 def is_admin(admin_id) -> bool:
-    """Owner OR an active row in admins."""
+    """Owner OR an active row in admins.
+
+    Being an administrator does NOT make someone the owner - the owner
+    console stays closed to admins unless OWNER_ID points at them.
+    """
 
     if is_owner(admin_id):
         return True

@@ -1,5 +1,9 @@
+import logging
+import re
 import os
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # .env file loader — works everywhere (normal Python, Pydroid3, systemd)
@@ -18,6 +22,16 @@ if _ENV_FILE.is_file():
         if "=" in line:
             key, _, value = line.partition("=")
             key = key.strip()
+            value = value.strip()
+            # Strip an inline comment, but only when the value is not a
+            # quoted string that legitimately contains a '#' (hashes show up
+            # in secrets). Without this, "ADMIN_IDS=123  # my id" silently
+            # became the string "123  # my id" and matched no user - which
+            # is how an owner can end up locked out of their own console.
+            if not (value[:1] in ('"', "'") and value[-1:] == value[:1]):
+                hash_pos = value.find("#")
+                if hash_pos != -1:
+                    value = value[:hash_pos]
             value = value.strip().strip('"').strip("'")
             os.environ.setdefault(key, value)
 
@@ -152,7 +166,30 @@ INR_PER_USD = float(os.getenv("INR_PER_USD", "85"))
 # Owner is identified first by OWNER_ID (env), then by a 3-step
 # credential challenge (username / password / security answer) implemented
 # in bot/owner_panel.py. Admin/owner actions are audited there.
-OWNER_ID = int(os.getenv("OWNER_ID", "0")) if os.getenv("OWNER_ID", "").isdigit() else None
+# Parse defensively: a stray space, a quote, or a trailing comment in .env
+# used to make isdigit() fail, which silently set OWNER_ID to None and
+# locked the owner out of their own console with no error anywhere.
+def _parse_int_env(name, default=None):
+    raw = (os.getenv(name, "") or "").strip()
+
+    # Unquote first, so a quoted value can still carry an inline comment.
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in ('"', "'"):
+        raw = raw[1:-1].strip()
+
+    # Tolerate a trailing inline comment, e.g. "123456  # my account"
+    raw = raw.split("#", 1)[0].strip().strip('"').strip("'").strip()
+    if not raw:
+        return default
+
+    match = re.match(r"^-?\d+", raw)
+    if not match:
+        logger.warning("%s is set to %r, which is not a number - ignoring it.",
+                       name, os.getenv(name))
+        return default
+    return int(match.group(0))
+
+
+OWNER_ID = _parse_int_env("OWNER_ID")
 OWNER_USERNAME = os.getenv("OWNER_USERNAME", "")
 OWNER_PASSWORD_HASH = os.getenv("OWNER_PASSWORD_HASH", "")
 OWNER_SECURITY_ANSWER_HASH = os.getenv("OWNER_SECURITY_ANSWER_HASH", "")

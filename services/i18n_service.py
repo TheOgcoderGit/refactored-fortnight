@@ -185,6 +185,66 @@ _STRINGS = {
     },
 }
 
+_STRINGS.update(
+    {
+        # Support assistant fallbacks. These only appear when Gemini is
+        # unavailable, and they must follow the user's language - an English
+        # user must never be answered in Hinglish.
+        "support.connect": {
+            "en": ("To connect: open the home screen and press 🔌 Connect Account, "
+                   "then send your phone number with country code (for example "
+                   "+919876543210). When the code arrives in Telegram, reply in "
+                   "the format FLOW12345."),
+            "hi": ("कनेक्ट करने के लिए होम स्क्रीन पर 🔌 Connect Account "
+                   "दबाएँ और अपना फ़ोन नंबर कंट्री कोड के साथ भेजें "
+                   "(जैसे +919876543210)। Telegram ऐप में कोड आने पर "
+                   "FLOW12345 फ़ॉर्मैट में जवाब दें।"),
+        },
+        "support.sources": {
+            "en": ("Open your project and use 📥 Sources or 🎯 Targets, then send a "
+                   "public username (@channel), a private invite link, or a numeric "
+                   "ID. For a target, your connected account must be an admin with "
+                   "the Post Messages permission."),
+            "hi": ("अपने प्रोजेक्ट में 📥 Sources या 🎯 Targets खोलें और "
+                   "public username (@channel), private invite link, या "
+                   "numeric ID भेजें। Target के लिए आपके connected account "
+                   "का admin होना ज़रूरी है, Post Messages permission के साथ।"),
+        },
+        "support.plans": {
+            "en": ("ChannelFlow has four plans:\n"
+                   "• Free — 100 forwards/day\n"
+                   "• Starter — 200 forwards/day\n"
+                   "• Pro — 1,000 forwards/day\n"
+                   "• Creator — 2,000+ forwards/day\n\n"
+                   "Every new account starts with a 7-day Creator trial."),
+            "hi": ("ChannelFlow के 4 प्लान हैं:\n"
+                   "• Free — 100 forwards/day\n"
+                   "• Starter — 200 forwards/day\n"
+                   "• Pro — 1,000 forwards/day\n"
+                   "• Creator — 2,000+ forwards/day\n\n"
+                   "हर नए अकाउंट को 7-दिन का Creator trial मिलता है।"),
+        },
+        "support.affiliate": {
+            "en": ("Open 💰 Affiliate inside your project and add your Amazon "
+                   "Associate tag (or another provider's ID). ChannelFlow "
+                   "rewrites product links in the posts it forwards so they "
+                   "carry your tag."),
+            "hi": ("अपने प्रोजेक्ट में 💰 Affiliate खोलकर अपना Amazon "
+                   "Associate tag (या किसी अन्य provider की ID) जोड़ें। "
+                   "ChannelFlow forwarded posts के product links को आपके "
+                   "tag से auto-replace कर देता है।"),
+        },
+        "support.generic": {
+            "en": ("You can manage projects, sources, targets, filters and "
+                   "auto-forwarding from the main menu. Ask me a more specific "
+                   "question, or open a ticket from 🆘 Support for a human."),
+            "hi": ("आप main menu से projects, sources, targets, filters और "
+                   "auto-forwarding सब manage कर सकते हैं। थोड़ा specific "
+                   "सवाल पूछें, या 🆘 Support से ticket खोलें।"),
+        },
+    }
+)
+
 _user_lang_cache = {}
 
 

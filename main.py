@@ -29,6 +29,7 @@ from telegram.ext import (
 
 from config import BOT_TOKEN
 from database.db import init_db
+from utils.startup_check import log_startup_checks
 
 # Clean imports from bot.handlers
 from bot.handlers import (
@@ -74,6 +75,7 @@ logger = logging.getLogger("channelflow")
 # 2. DATABASE INITIALIZATION
 # ==========================================
 init_db()
+log_startup_checks()
 logger.info("Database initialized successfully.")
 
 # ==========================================

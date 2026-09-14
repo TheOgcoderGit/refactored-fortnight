@@ -164,8 +164,11 @@ def collect(root: pathlib.Path):
                 else:
                     variants = [body]
                 found.setdefault((rel, func, body), variants)
-    return (sorted((rel, func, variants) for (rel, func, _b), variants in found.items()),
-            defined)
+    # func can be None for module-level literals; keep sorting stable.
+    entries = sorted(
+        ((rel, func, variants) for (rel, func, _b), variants in found.items()),
+        key=lambda item: (item[0], item[1] or "", item[2][0]))
+    return (entries, defined)
 
 
 # ----------------------------------------------------------------------

@@ -292,25 +292,51 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
     return False
 
 
+def _canned_support_answer(user_id: int, text: str) -> str:
+    """Last-resort answers, used only when Gemini is unavailable.
+
+    These follow the user's selected language. They used to be the *first*
+    thing tried, hardcoded in Hinglish, which is why an English user asking
+    about "source" got a Hindi paragraph even with English selected.
+    """
+
+    from services.i18n_service import t
+
+    question = (text or "").lower()
+
+    if any(word in question for word in ("connect", "otp", "flow", "phone", "login")):
+        return t(user_id, "support.connect")
+    if any(word in question for word in ("source", "target", "channel", "destination")):
+        return t(user_id, "support.sources")
+    if any(word in question for word in ("plan", "price", "pricing", "quota", "limit", "trial")):
+        return t(user_id, "support.plans")
+    if any(word in question for word in ("affiliate", "amazon", "flipkart", "tag")):
+        return t(user_id, "support.affiliate")
+
+    return t(user_id, "support.generic")
+
+
 async def handle_text(message, user_id: int, text: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
     if WAITING_AI_SUPPORT.get(user_id):
         WAITING_AI_SUPPORT.pop(user_id, None)
         status_msg = await message.reply_text("Analyzing your question...")
 
+        # Gemini answers first. It used to be the *last* resort: a keyword
+        # match ran before it, so any question containing "source", "plan",
+        # "connect" or "affiliate" got a canned paragraph and the model was
+        # never called - which is why every question got the same reply.
         ans = None
-        q = text.lower()
-        if "connect" in q or "otp" in q or "flow" in q:
-            ans = "Connect karne ke liye Welcome screen par [ 🔌 Connect Account ] dabayein aur apna phone number bhejein. Telegram app me code aane par format `FLOW12345` me reply karein."
-        elif "source" in q or "target" in q or "channel" in q:
-            ans = "Apne project me jakar [ 📥 Sources ] ya [ 🎯 Targets ] dabayein aur public username (@channel) ya private invite link bhejein. Target channel me bot/account ka admin hona zaroori hai."
-        elif "plan" in q or "price" in q or "quota" in q:
-            ans = "ChannelFlow ke 4 Plans hain:\n• Free: 100 forwards/day\n• Starter: 200 forwards/day (Rs 199/mo)\n• Pro: 1,000 forwards/day (Rs 399/mo)\n• Creator: 2,000+ forwards/day (Rs 799/mo)"
-        elif "affiliate" in q or "amazon" in q:
-            ans = "Project me [ 💰 Affiliate ] kholkar apna Amazon Associate tag add karein. ChannelFlow source posts ke sare product links ko aapke tag se auto-replace kar dega!"
+        try:
+            resp = await support_ai_service.get_support_ai_response(user_id, text)
+            if resp and resp.success and resp.text:
+                ans = resp.text
+        except Exception as exc:
+            logger.warning("Support AI failed for user %s: %s", user_id, exc)
 
         if not ans:
-            resp = await support_ai_service.get_support_ai_response(user_id, text)
-            ans = resp.text if resp and resp.text else "ChannelFlow AI support: You can manage projects, sources, targets, filters, and auto-forwarding easily. Contact @ChannelFlowSupport_bot for further help."
+            # Only now fall back to the canned answers, so a provider outage
+            # still gives the user something useful instead of an error.
+            ans = _canned_support_answer(user_id, text)
 
         await status_msg.edit_text(
             f"🤖 *AI Assistant:*\n\n{ans}",
