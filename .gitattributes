@@ -1,0 +1,3 @@
+# Builds handed to testers must not be packed inside the next build.
+*.zip export-ignore
+*.sha256 export-ignore
