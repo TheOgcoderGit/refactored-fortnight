@@ -915,7 +915,6 @@ async def _render_analytics(query):
 
 async def _render_whatsapp_pairing_status(query):
     """Show WhatsApp pairing codes and their status for admin review."""
-    from database.db import get_connection
     from services.destination_service import get_destinations
 
     conn = get_connection()

@@ -11,7 +11,7 @@
 # - BadRequest (Message is not modified) immune
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import httpx
 
 from telegram import (
@@ -616,7 +616,6 @@ async def successful_payment_handler(update: Update, context: ContextTypes.DEFAU
         uid = int(uid_str)
         months = int(months_str)
 
-        from datetime import datetime, timedelta, timezone
         exp = (datetime.now(timezone.utc) + timedelta(days=30 * months)).isoformat()
         plan_service.set_user_plan(uid, plan, expiry=exp)
 

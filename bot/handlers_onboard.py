@@ -205,6 +205,52 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 cancel_cmd = cancel
 
 
+# Shared so /connect, the account screen's button and the "Reconnect
+# account" button on failure screens all show the same instructions. They
+# used to be three different messages of varying detail, and the short one
+# (on the button) did not mention that spaces break the number - which is
+# the single most common reason connecting fails.
+CONNECT_PROMPT = (
+    "📱 **Connect Account**\n\n"
+    "Please send your Telegram phone number with country code.\n"
+    "Example (India): `+919876543210`\n\n"
+    "⚠️ **Important:**\n"
+    "• Number must start with `+` and country code\n"
+    "• NO spaces inside the number\n"
+    "• Correct: `+914527896325`\n"
+    "• Wrong: `+91 45278 96325`\n\n"
+    "What happens next:\n"
+    "1. Telegram sends an official verification code to your Telegram app.\n"
+    "2. Send it as `FLOW12345` (replace 12345 with your OTP).\n"
+    "3. Your session is encrypted immediately with AES-256."
+)
+
+CONNECT_WHY = (
+    "🤔 **Why does ChannelFlow need my number?**\n\n"
+    "ChannelFlow forwards posts **as you**, using your own Telegram "
+    "account. That is the only way it can read your private channels and "
+    "post to channels where you are an admin — a bot account cannot do "
+    "either.\n\n"
+    "• The number is only used to log in once.\n"
+    "• The resulting session is encrypted at rest (AES-256).\n"
+    "• The OTP is never stored or logged.\n"
+    "• You can disconnect any time from ⚙️ Settings.\n\n"
+    "ChannelFlow never posts anything on your behalf without a project "
+    "you created."
+)
+
+
+def connect_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🤔 Why is this needed?", callback_data="connect:why")],
+        [
+            InlineKeyboardButton("◀️ Back", callback_data="nav:home"),
+            InlineKeyboardButton("❌ Cancel", callback_data="act:cancel"),
+            InlineKeyboardButton("🏠 Home", callback_data="nav:home"),
+        ],
+    ])
+
+
 async def connect_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if user_sessions.is_connected(user.id):
@@ -214,16 +260,7 @@ async def connect_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         WAITING_CONNECT_PHONE[user.id] = True
         await update.message.reply_text(
-            "📱 **Connect Telegram Account**\n\n"
-            "Please send your phone number in international format with country code.\n\n"
-            "Examples:\n"
-            "• India: `+919876543210`\n"
-            "• USA: `+12025550123`\n"
-            "• UK: `+447911123456`\n\n"
-            "What happens next:\n"
-            "1. Telegram sends an official verification code to your Telegram app.\n"
-            "2. Send it as `FLOW12345` (replace 12345 with your OTP).\n"
-            "3. Your session is encrypted immediately with AES-256."
+            CONNECT_PROMPT, reply_markup=connect_keyboard(), parse_mode="Markdown"
         )
         return
 
@@ -463,11 +500,23 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
             return
         WAITING_CONNECT_PHONE[user_id] = True
         await query.message.reply_text(
-            "📱 **Connect Telegram Account**\n\n"
-            "Please send your phone number with country code.\n"
-            "Example: `+919876543210`"
+            CONNECT_PROMPT, reply_markup=connect_keyboard(), parse_mode="Markdown"
         )
         return
+
+    if action == "connect":
+        if parts[1] == "why":
+            await query.edit_message_text(
+                CONNECT_WHY,
+                parse_mode="Markdown",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("📱 Continue", callback_data="acct:connect")],
+                    [InlineKeyboardButton("❌ Cancel", callback_data="act:cancel"),
+                     InlineKeyboardButton("🏠 Home", callback_data="nav:home")],
+                ]),
+            )
+            return True
+        return False
 
     # Disconnect Confirmation Sheet
     if action == "settings" and parts[1] == "disconnect":
