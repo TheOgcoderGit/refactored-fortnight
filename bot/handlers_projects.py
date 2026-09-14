@@ -10,7 +10,8 @@ from database.db import get_connection
 from core import client_pool, user_sessions
 from core.forwarder import force_refresh_routes
 from core.telegram_utils import get_chat, send_test_message
-from bot import handlers_features
+from bot import handlers_features, error_actions
+from core import telegram_utils as tg
 
 # Services
 from services.project_service import (
@@ -652,13 +653,21 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
         try:
             target_chat = await get_chat(text, for_destination=True, user_id=user_id)
         except Exception as e:
-            await status_msg.edit_text(f"❌ Target channel error: {e}\n\nPlease verify that your account has joined/admin rights and send again:")
-            WAITING_TEMPLATE_TARGET[user_id] = tpl_key
+            # One message for five different problems used to be all the
+            # guidance the user got. Report the actual cause and offer the
+            # action that fixes it.
+            logger.info("Template target resolve failed for user %s: %s", user_id, e)
+            error_actions.remember_retry(
+                user_id, "template_target", tpl=tpl_key)
+            await error_actions.edit_resolution_failure(status_msg, e, "target channel")
             return True
 
         if not target_chat:
-            await status_msg.edit_text("❌ Target channel could not be found. Please check username/link and send again:")
-            WAITING_TEMPLATE_TARGET[user_id] = tpl_key
+            error_actions.remember_retry(user_id, "template_target", tpl=tpl_key)
+            await status_msg.edit_text(
+                tg.ERROR_COPY["not_found"],
+                reply_markup=error_actions.failure_keyboard(tg.ChatNotFoundError()),
+                parse_mode="HTML")
             return True
 
         try:
@@ -696,7 +705,9 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📥 View Sources", callback_data=f"src:list:{pid}")]]),
                 )
         except Exception as e:
-            await message.reply_text(f"❌ Could not add source: {e}")
+            logger.info("Add source failed for user %s: %s", user_id, e)
+            error_actions.remember_retry(user_id, "source", pid=pid)
+            await error_actions.reply_resolution_failure(message, e, "source")
         return True
 
     # 4. Add Destination Input
@@ -713,10 +724,20 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
                     reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🎯 View Targets", callback_data=f"tgt:list:{pid}")]]),
                 )
         except Exception as e:
-            await message.reply_text(f"❌ Could not add target: {e}")
+            logger.info("Add target failed for user %s: %s", user_id, e)
+            error_actions.remember_retry(user_id, "destination", pid=pid)
+            await error_actions.reply_resolution_failure(message, e, "target")
         return True
 
     # 5. Feature hub text input (prefix/suffix, filters, watermark text, ...)
+    # Universal cancel: works in every flow, not just onboarding.
+    if text.strip().lower() in ("/cancel", "cancel"):
+        if error_actions.cancel_pending(user_id):
+            await message.reply_text("❌ Cancelled. Nothing was changed.",
+                                     reply_markup=InlineKeyboardMarkup(
+                                         [[InlineKeyboardButton("🏠 Home", callback_data="nav:home")]]))
+            return True
+
     if await handlers_features.handle_text(message, user_id, text, context):
         return True
 

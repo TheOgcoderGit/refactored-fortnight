@@ -325,6 +325,83 @@ async def _render_help(query, user_id):
                 ]))
 
 
+async def _render_connect(query, user_id: int, context) -> bool:
+    """Entry point for the "🔄 Reconnect account" button on failure screens.
+
+    Routes into the same flow as /connect and the account screen's
+    "🔌 Connect Account" button so there is only one onboarding path.
+    """
+    from bot import handlers_onboard
+    from core import user_sessions
+
+    # ADMIN_IDS is imported at module level - re-importing it here would
+    # make it function-local and break the admin branch of handle_callbacks.
+    if user_id in ADMIN_IDS or user_sessions.is_connected(user_id):
+        await _edit(query, "✅ Telegram account is already connected.",
+                    InlineKeyboardMarkup([_home_row()]))
+        return True
+
+    handled = await handlers_onboard.handle_callbacks(
+        query, user_id, "acct", ["acct", "connect"], context)
+    if not handled:
+        await _send(query, "Use /connect to connect your Telegram account.")
+    return True
+
+
+async def _reopen_prompt(query, user_id: int, ctx: dict) -> bool:
+    """Re-arms the prompt that failed, so "🔁 Try again" actually works.
+
+    Without this the button could only say "start over", which meant
+    navigating back through two or three screens to get to the same place.
+    """
+    from bot import handlers_projects as hp
+
+    kind = ctx.get("kind")
+    pid = ctx.get("pid")
+
+    if kind == "source":
+        hp.CURRENT_PROJECT[user_id] = pid
+        hp.WAITING_SOURCE[user_id] = True
+        await _send(query,
+                    "📥 **Add Source Channel or Group**\n\n"
+                    "Send any of the following:\n"
+                    "• Public Username: `@channelusername`\n"
+                    "• Private Invite Link: `https://t.me/+AbCdEf...`\n"
+                    "• Channel ID: `-1001234567890`\n\n"
+                    "*(Make sure your connected Telegram account has joined "
+                    "this channel)*")
+        return True
+
+    if kind == "destination":
+        hp.CURRENT_PROJECT[user_id] = pid
+        hp.WAITING_DESTINATION[user_id] = True
+        await _send(query,
+                    "🎯 **Add Target Channel or Group**\n\n"
+                    "Send the username, invite link or ID of the channel "
+                    "that should *receive* the posts.\n\n"
+                    "Your connected account must be an **admin** there with "
+                    "**Post Messages** permission.")
+        return True
+
+    if kind == "template_target":
+        hp.WAITING_TEMPLATE_TARGET[user_id] = ctx.get("tpl")
+        await _send(query,
+                    "🎯 **Send your target channel**\n\n"
+                    "The template's pre-loaded sources will be added "
+                    "automatically; you only provide the destination.")
+        return True
+
+    if kind == "project_name":
+        hp.PENDING_TEMPLATE_CHOICE[user_id] = "blank"
+        hp.WAITING_PROJECT_NAME[user_id] = True
+        await _send(query, "📝 **Send a name for your new project:**")
+        return True
+
+    await query.answer("That step can't be retried - please start it again.",
+                       show_alert=True)
+    return True
+
+
 async def _render_faq(query):
     articles = knowledge_service.list_articles(kind="faq")
     if not articles:
@@ -390,6 +467,8 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
         if sub == "help":
             await _render_help(query, user_id)
             return True
+        if sub == "connect":
+            return await _render_connect(query, user_id, context)
         # nav:projects / nav:plans / nav:earn / nav:account / nav:support
         # are owned by bot/handlers.py's direct-navigation block.
         return False
@@ -417,6 +496,30 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
             await handlers_admin.render_support_view(query.message, user_id)
             return True
         return False
+
+    # ---------------- universal cancel / retry ----------------
+    #
+    # Failure screens and every "type a value" prompt offer these. Before
+    # this existed, a cancelled flow left the bot waiting for input, so the
+    # user's next message was silently swallowed as the value.
+    if action == "act":
+        if sub == "cancel":
+            from bot.error_actions import cancel_pending
+            cancel_pending(user_id)
+            await _edit(query, "❌ Cancelled. Nothing was changed.",
+                        InlineKeyboardMarkup([_home_row()]))
+            return True
+
+        if sub == "retry":
+            from bot.error_actions import take_retry
+            ctx = take_retry(user_id)
+            if not ctx:
+                await query.answer("There's nothing to retry - start the action again.",
+                                   show_alert=True)
+                return True
+            return await _reopen_prompt(query, user_id, ctx)
+
+        return True
 
     # ---------------- language ----------------
     if action == "lang":
