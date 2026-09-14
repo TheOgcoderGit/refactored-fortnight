@@ -132,15 +132,30 @@ PENDING_RETRY = {}
 
 
 def _pending_stores():
-    """Every module-level dict that can hold a pending user action."""
-    from bot import (handlers_admin, handlers_features, handlers_nav,
-                     handlers_onboard, handlers_projects)
+    """Every module-level dict that can hold a pending user action.
+
+    If a store is missing here, /cancel cannot clear it - and a prompt
+    the user has walked away from keeps swallowing everything they type
+    afterwards. Two were missing: the template source editor (added with
+    the "edit template sources" work) meant that abandoning "➕ Add a
+    source channel" left the bot reading every later message as a
+    channel handle, and the payment-screenshot wait meant /cancel could
+    not get a user out of a payment they had decided not to make.
+
+    tools_orphan_prompts.py checks this list against every prompt the UI
+    can produce, so a future store that is added but not registered here
+    gets reported instead of quietly eating messages.
+    """
+    from bot import (admin_promo_handlers, handlers_admin, handlers_billing,
+                     handlers_features, handlers_nav, handlers_onboard,
+                     handlers_projects)
 
     return [
         handlers_projects.WAITING_PROJECT_NAME,
         handlers_projects.WAITING_SOURCE,
         handlers_projects.WAITING_DESTINATION,
         handlers_projects.WAITING_TEMPLATE_TARGET,
+        handlers_projects.WAITING_TEMPLATE_SOURCE,
         handlers_projects.PENDING_TEMPLATE_CHOICE,
         handlers_projects.CURRENT_PROJECT,
         handlers_features.PENDING_INPUT,
@@ -151,8 +166,13 @@ def _pending_stores():
         handlers_admin.WAITING_COUPON_CODE,
         handlers_admin.WAITING_CLONE_TOKEN,
         handlers_admin.WAITING_BROADCAST_MSG,
+        # Multi-stage: promo post / broadcast drafts.
+        admin_promo_handlers.WAITING_PROMO,
         handlers_onboard.WAITING_CONNECT_PHONE,
         handlers_onboard.WAITING_CONNECT_STAGE,
+        # A photo, not text - but still something the user is waiting on
+        # and must be able to walk away from.
+        handlers_billing.WAITING_PAYMENT_SCREENSHOT,
     ]
 
 

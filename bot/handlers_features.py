@@ -1069,7 +1069,8 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
                     "🔑 <b>Keyword filters</b>\n\n"
                     "• <b>Required</b>: message must contain at least one of these words.\n"
                     "• <b>Blocked</b>: message is skipped if it contains any of these words.\n\n"
-                    "Send a comma-separated list, e.g. <code>deal, offer, discount</code>",
+                    "Use the buttons below. Enter a comma-separated list, "
+                    "e.g. <code>deal, offer, discount</code>",
                     keyword_keyboard(project_id, settings))
         return True
 
@@ -1091,7 +1092,8 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
                     "🌐 <b>Domain filters</b>\n\n"
                     "• <b>Allowed</b>: if set, only links to these domains pass.\n"
                     "• <b>Blocked</b>: links to these domains are rejected.\n\n"
-                    "Send domains without the scheme, e.g. <code>amazon.in, flipkart.com</code>",
+                    "Use the buttons below. Enter domains without the "
+                    "scheme, e.g. <code>amazon.in, flipkart.com</code>",
                     domain_keyboard(project_id, rules))
         return True
 

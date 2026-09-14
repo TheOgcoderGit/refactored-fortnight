@@ -496,7 +496,8 @@ async def handle_callbacks(query, user_id: int, action: str, parts: list, contex
             from bot import handlers_admin
             await _send(query,
                         "💡 <b>Feature request</b>\n\n"
-                        "Send your idea as a support ticket and it will reach the team:")
+                        "Open a support ticket with your idea and it will "
+                        "reach the team:")
             await handlers_admin.render_support_view(query.message, user_id)
             return True
         if sub == "support":
