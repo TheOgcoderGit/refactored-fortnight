@@ -46,6 +46,7 @@ from bot.handlers import (
     walletadjust_command,
     format_command,
     status_command,
+    owner_auth_router,
     preview_command,
     credits_command,
     grantcredits_command,
@@ -182,6 +183,16 @@ app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment_ha
 # ==========================================
 # 8. TEXT & MEDIA ROUTERS
 # ==========================================
+# Owner challenge answers have to be read before the menu router, which
+# would otherwise treat the password as a menu selection. It only acts
+# when the user is mid-challenge and passes everything else through.
+app.add_handler(
+    MessageHandler(
+        filters.TEXT & ~filters.COMMAND,
+        owner_auth_router
+    )
+)
+
 app.add_handler(
     MessageHandler(
         filters.TEXT & ~filters.COMMAND,

@@ -15,6 +15,7 @@ from bot import (
     handlers_admin,
     handlers_status,
 )
+from bot import owner_panel as owner_panel_mod
 
 logger = logging.getLogger(__name__)
 
@@ -30,11 +31,19 @@ start = _find_fn(handlers_onboard, "start_cmd", "start_command", "start")
 cancel = _find_fn(handlers_onboard, "cancel", "cancel_cmd")
 connect_command = _find_fn(handlers_onboard, "connect_cmd", "connect_command", "connect")
 admin_panel = _find_fn(handlers_admin, "admin_panel_cmd", "admin_panel", "admin_dashboard")
-owner_panel = _find_fn(handlers_admin, "owner_panel_cmd", "owner_panel")
+# /owner is the *owner* console: it must be gated on OWNER_ID and the
+# 3-step challenge in bot/owner_panel.py. The old target,
+# handlers_admin.owner_panel_cmd, checked ADMIN_IDS instead, which handed
+# the owner console - payments, userbase, clone network - to every admin
+# with no challenge at all.
+owner_command = owner_panel_mod.owner_command
+owner_auth_text = owner_panel_mod.owner_auth_text_handler
+owner_auth_router = owner_panel_mod.owner_auth_router
+owner_panel = owner_command
 clones_command = _find_fn(handlers_admin, "clones_command", "render_clones_view")
 status_command = _find_fn(handlers_status, "status_cmd", "status_command", "status")
 
-owner_pannel = owner_panel
+owner_pannel = owner_command
 admin_pannel = admin_panel
 
 async def payments_command(update: Update, context: ContextTypes.DEFAULT_TYPE):

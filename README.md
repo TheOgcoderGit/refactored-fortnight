@@ -79,6 +79,48 @@ not silently truncated. A requested noforwards flag unsupported by the installed
 Ticket reads exclude internal notes. User operations check ownership. Admin support reply/notification needs live testing.
 Updates: https://t.me/BotFoundrry. Set SUPPORT_GROUP_URL for your support group.
 
+## Owner and admin access
+
+These are two different roles and they are not interchangeable.
+
+**Admins** (`ADMIN_IDS`, comma-separated Telegram user IDs) get `/admin`:
+support tickets, broadcasts, coupons and user management.
+
+**The owner** (`OWNER_ID`, a single Telegram user ID) additionally gets
+`/owner`, which opens the payment approval queue, the full userbase and the
+clone network. Being in `ADMIN_IDS` does **not** grant `/owner` — the two
+are checked separately on purpose.
+
+`/owner` is protected by a three-step challenge: your Telegram ID, then a
+username, then a password and a security answer. The session lasts one
+hour and is held in memory, so restarting the bot requires signing in
+again.
+
+Set these in `.env` to enable it:
+
+```
+OWNER_ID=123456789
+OWNER_USERNAME=your-owner-username
+OWNER_PASSWORD_HASH=<sha256 of your password>
+OWNER_SECURITY_ANSWER_HASH=<sha256 of your security answer>
+```
+
+Generate a hash with:
+
+```
+python -c "import hashlib;print(hashlib.sha256(b'your-value').hexdigest())"
+```
+
+`/owner` refuses to start the challenge until all four are set, and tells
+you which are missing — an unconfigured challenge cannot be completed,
+because every answer hashes to something that never matches an empty
+string. If `OWNER_ID` itself is unset, `/owner` says so rather than
+telling the owner they are unauthorised.
+
+Values may carry surrounding whitespace, quotes or a trailing `# comment`;
+the parser tolerates all three. A malformed value is ignored and logged,
+which is better than silently becoming `None` and locking you out.
+
 ## Database and recovery
 SQLite WAL with foreign keys and additive migrations. UTC daily accounting, one unit per source dispatch,
 shared across its destinations. Original databases are never bundled.

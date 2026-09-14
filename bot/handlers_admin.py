@@ -35,7 +35,14 @@ async def admin_panel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def owner_panel_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    if user.id not in ADMIN_IDS:
+    # Owner sections belong to the OWNER_ID account alone. This used to
+    # check ADMIN_IDS, which put the owner console - payment approval,
+    # the userbase and the clone network - one /owner away from every
+    # admin, with no challenge. /owner itself now goes through the
+    # authenticated flow in bot/owner_panel.py; this gate is the backstop
+    # for anything still calling it directly.
+    from services.audit_service import is_owner
+    if not is_owner(user.id):
         await update.message.reply_text("Platform owner only.")
         return
     text = f"👑 Platform Owner Control Panel\n\nOfficial Updates Channel: {UPDATES_CHANNEL_URL}\nOwner Handle: {OWNER_HANDLE}\n\nSelect a management section:"

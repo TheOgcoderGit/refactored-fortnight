@@ -14,7 +14,7 @@ import time
 import logging
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
-from telegram.ext import ContextTypes
+from telegram.ext import ApplicationHandlerStop, ContextTypes
 
 from config import (
     OWNER_ID, OWNER_USERNAME, OWNER_PASSWORD_HASH,
@@ -86,6 +86,49 @@ async def _end_owner_session(query, user_id: int):
     await query.message.reply_text("🔒 Owner session ended. Use /owner to start again.")
 
 
+def _credentials_configured() -> bool:
+    """True when the 3-step challenge can actually be answered.
+
+    If any of these are empty the challenge is unwinnable: every answer
+    hashes to something that never equals "". Starting the flow anyway
+    locked the owner out of their own console with no explanation, so
+    /owner now says what is missing instead.
+    """
+    return all((OWNER_USERNAME, OWNER_PASSWORD_HASH, OWNER_SECURITY_ANSWER_HASH))
+
+
+OWNER_SETUP_HELP = (
+    "⚙️ Owner credentials are not configured.\n\n"
+    "The owner console is protected by a 3-step challenge, and these "
+    "environment variables are not all set:\n\n"
+    "• OWNER_ID — your Telegram user ID\n"
+    "• OWNER_USERNAME — the username for step 1\n"
+    "• OWNER_PASSWORD_HASH — sha256 of the step 2 password\n"
+    "• OWNER_SECURITY_ANSWER_HASH — sha256 of the step 3 answer\n\n"
+    "Generate a hash with:\n"
+    "    python -c \"import hashlib;print(hashlib.sha256("
+    "b'your-value').hexdigest())\"\n\n"
+    "Set them in your environment (or .env) and restart the bot. "
+    "Ask the bot to /status in the meantime to check everything else."
+)
+
+
+async def owner_auth_router(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Consumes the challenge answers before the menu router sees them.
+
+    Registered ahead of menu_handler. Most messages are not part of an
+    auth flow and pass straight through; when one is, the answer is
+    handled here and the update is stopped, so a password is never also
+    interpreted as a menu command.
+    """
+    user = update.effective_user
+    if user is None or user.id not in _owner_auth_flow:
+        return
+
+    await owner_auth_text_handler(update, context)
+    raise ApplicationHandlerStop
+
+
 async def owner_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     if user is None:
@@ -94,8 +137,23 @@ async def owner_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = user.id
 
     # Step 0: verify Telegram ID against OWNER_ID
-    if OWNER_ID is None or user_id != OWNER_ID:
+    if OWNER_ID is None:
+        # Not "unauthorised" - the owner has simply never been configured.
+        # Sending them to re-auth on a box with no owner would be a lie.
+        await update.message.reply_text(
+            "⚙️ No owner is configured for this bot.\n\n"
+            "Set OWNER_ID (your Telegram user ID) in the environment and "
+            "restart the bot to enable the owner console.")
+        return
+
+    if user_id != OWNER_ID:
         await update.message.reply_text("⛔ You are not authorized as the owner.")
+        return
+
+    # The ID matches, but with no credentials the challenge cannot be
+    # completed - say so rather than starting a flow with no exit.
+    if not _credentials_configured():
+        await update.message.reply_text(OWNER_SETUP_HELP)
         return
 
     # Check lockout
