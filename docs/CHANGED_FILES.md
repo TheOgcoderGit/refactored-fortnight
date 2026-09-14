@@ -1,0 +1,31 @@
+# Changed/new files versus attachment
+
+- .env.example
+- PRD.md
+- README.md
+- bot/handlers.py
+- bot/keyboards.py
+- core/client_pool.py
+- core/forwarder.py
+- core/listener.py
+- core/subscription_scheduler.py
+- core/telegram_utils.py
+- core/user_sessions.py
+- database/db.py
+- database/hardening.py
+- database/models.py
+- docs/BASELINE_AUDIT.md
+- docs/BASELINE_INVENTORY.md
+- docs/LEGACY_README.md
+- docs/LIVE_ACCEPTANCE.md
+- main.py
+- services/dedup_service.py
+- services/formatting_service.py
+- services/forward_credit_service.py
+- services/payment_service.py
+- services/plan_service.py
+- services/platform_registry.py
+- services/telegram_ownership.py
+- tests/test_hardening.py
+- tests/test_runtime_doubles.py
+- utils/preflight.py

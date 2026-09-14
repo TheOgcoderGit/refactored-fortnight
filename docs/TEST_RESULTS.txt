@@ -1,0 +1,76 @@
+test_default_exact_noop (test_hardening.FormattingTests.test_default_exact_noop) ... ok
+test_destination_cross_project_rejected (test_hardening.FormattingTests.test_destination_cross_project_rejected) ... ok
+test_destination_override (test_hardening.FormattingTests.test_destination_override) ... ok
+test_header_footer_and_legacy_prefix (test_hardening.FormattingTests.test_header_footer_and_legacy_prefix) ... ok
+test_invalid_options_rejected (test_hardening.FormattingTests.test_invalid_options_rejected) ... ok
+test_invalid_regex_rejected_before_write (test_hardening.FormattingTests.test_invalid_regex_rejected_before_write) ... ok
+test_keep_zero_empty (test_hardening.FormattingTests.test_keep_zero_empty) ... ok
+test_old_invalid_regex_no_crash (test_hardening.FormattingTests.test_old_invalid_regex_no_crash) ... ok
+test_project_cross_user_rejected (test_hardening.FormattingTests.test_project_cross_user_rejected) ... ok
+test_remove_handles_not_emails (test_hardening.FormattingTests.test_remove_handles_not_emails) ... ok
+test_remove_links_not_emails (test_hardening.FormattingTests.test_remove_links_not_emails) ... ok
+test_settings_persist (test_hardening.FormattingTests.test_settings_persist) ... ok
+test_trim_empty_and_short (test_hardening.FormattingTests.test_trim_empty_and_short) ... ok
+test_trim_lines_then_words (test_hardening.FormattingTests.test_trim_lines_then_words) ... ok
+test_url_placeholder_corruption_regression (test_hardening.FormattingTests.test_url_placeholder_corruption_regression) ... ok
+test_custom_limits_preserved (test_hardening.MigrationTests.test_custom_limits_preserved) ... ok
+test_defaults (test_hardening.MigrationTests.test_defaults) ... ok
+test_foreign_keys_enabled (test_hardening.MigrationTests.test_foreign_keys_enabled) ... ok
+test_migration_from_baseline_schema (test_hardening.MigrationTests.test_migration_from_baseline_schema) ... ok
+test_repeat_init_preserves_data (test_hardening.MigrationTests.test_repeat_init_preserves_data) ... ok
+test_unidentified_legacy_session_requires_reconnect (test_hardening.MigrationTests.test_unidentified_legacy_session_requires_reconnect) ... ok
+test_actual_id_required (test_hardening.OwnershipTests.test_actual_id_required) ... ok
+test_concurrent_claim (test_hardening.OwnershipTests.test_concurrent_claim) ... ok
+test_reconnect_retains_claim_until_explicit_disconnect (test_hardening.OwnershipTests.test_reconnect_retains_claim_until_explicit_disconnect) ... ok
+test_same_owner_update (test_hardening.OwnershipTests.test_same_owner_update) ... ok
+test_two_owners_one_external_account (test_hardening.OwnershipTests.test_two_owners_one_external_account) ... ok
+test_committed_reference_does_not_double_consume (test_hardening.QuotaTests.test_committed_reference_does_not_double_consume) ... ok
+test_credits_after_daily_allowance (test_hardening.QuotaTests.test_credits_after_daily_allowance) ... ok
+test_credits_race_last_unit (test_hardening.QuotaTests.test_credits_race_last_unit) ... ok
+test_cross_user_denied (test_hardening.QuotaTests.test_cross_user_denied) ... ok
+test_delete_does_not_reset_allowance (test_hardening.QuotaTests.test_delete_does_not_reset_allowance) ... ok
+test_failure_refunds_credit_once (test_hardening.QuotaTests.test_failure_refunds_credit_once) ... ok
+test_failure_refunds_daily_once (test_hardening.QuotaTests.test_failure_refunds_daily_once) ... ok
+test_idempotent_credit_grant (test_hardening.QuotaTests.test_idempotent_credit_grant) ... ok
+test_last_unit_race_across_projects (test_hardening.QuotaTests.test_last_unit_race_across_projects) ... ok
+test_midnight_refund_uses_original_day (test_hardening.QuotaTests.test_midnight_refund_uses_original_day) ... ok
+test_no_negative_credits (test_hardening.QuotaTests.test_no_negative_credits) ... ok
+test_pending_reference_not_replayed (test_hardening.QuotaTests.test_pending_reference_not_replayed) ... ok
+test_reference_reuse_rejected (test_hardening.QuotaTests.test_reference_reuse_rejected) ... ok
+test_suspended_user_denied (test_hardening.QuotaTests.test_suspended_user_denied) ... ok
+test_concurrent_trial (test_hardening.TrialTests.test_concurrent_trial) ... ok
+test_expiry_does_not_allow_new_trial (test_hardening.TrialTests.test_expiry_does_not_allow_new_trial) ... ok
+test_only_one_trial (test_hardening.TrialTests.test_only_one_trial) ... ok
+test_trial_expires_effectively (test_hardening.TrialTests.test_trial_expires_effectively) ... ok
+test_ai_and_formatting_compose (test_runtime_doubles.ForwardTests.test_ai_and_formatting_compose) ... ok
+test_ambiguous_network_does_not_replay (test_runtime_doubles.ForwardTests.test_ambiguous_network_does_not_replay) ... ok
+test_cross_user_route_rejected (test_runtime_doubles.ForwardTests.test_cross_user_route_rejected) ... ok
+test_destination_override_runtime (test_runtime_doubles.ForwardTests.test_destination_override_runtime) ... ok
+test_dispatch_consumes_exactly_one_unit (test_runtime_doubles.ForwardTests.test_dispatch_consumes_exactly_one_unit) ... ok
+test_duplicate_event_sends_once (test_runtime_doubles.ForwardTests.test_duplicate_event_sends_once) ... ok
+test_explicit_failure_refunds (test_runtime_doubles.ForwardTests.test_explicit_failure_refunds) ... Forward failed permanently for claim 1
+ok
+test_flood_wait_bounded (test_runtime_doubles.ForwardTests.test_flood_wait_bounded) ... Forward failed permanently for claim 1
+ok
+test_hidden_links_strip_entities_preserve_text (test_runtime_doubles.ForwardTests.test_hidden_links_strip_entities_preserve_text) ... ok
+test_link_preview_and_mono_parameters (test_runtime_doubles.ForwardTests.test_link_preview_and_mono_parameters) ... ok
+test_no_wallet_mutation (test_runtime_doubles.ForwardTests.test_no_wallet_mutation) ... ok
+test_overlong_output_rejected_without_charge (test_runtime_doubles.ForwardTests.test_overlong_output_rejected_without_charge) ... ok
+test_parallel_duplicates (test_runtime_doubles.ForwardTests.test_parallel_duplicates) ... ok
+test_protected_content_not_copied (test_runtime_doubles.ForwardTests.test_protected_content_not_copied) ... ok
+test_stopped_project_rejected (test_runtime_doubles.ForwardTests.test_stopped_project_rejected) ... ok
+test_cancel_disconnects (test_runtime_doubles.LoginTests.test_cancel_disconnects) ... ok
+test_duplicate_external_id_blocks_finalize (test_runtime_doubles.LoginTests.test_duplicate_external_id_blocks_finalize) ... ok
+test_encryption_failure_cleans_pending (test_runtime_doubles.LoginTests.test_encryption_failure_cleans_pending) ... Telegram login finalization failed (ValueError)
+ok
+test_expired_attempt_rejected (test_runtime_doubles.LoginTests.test_expired_attempt_rejected) ... ok
+test_flow_formats (test_runtime_doubles.LoginTests.test_flow_formats) ... ok
+test_other_user_cannot_consume_attempt (test_runtime_doubles.LoginTests.test_other_user_cannot_consume_attempt) ... ok
+test_password_path (test_runtime_doubles.LoginTests.test_password_path) ... ok
+test_valid_code_finalization_regression (test_runtime_doubles.LoginTests.test_valid_code_finalization_regression) ... ok
+test_wrong_code_retry (test_runtime_doubles.LoginTests.test_wrong_code_retry) ... ok
+
+----------------------------------------------------------------------
+Ran 68 tests in 2.233s
+
+OK

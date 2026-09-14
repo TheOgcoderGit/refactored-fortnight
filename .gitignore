@@ -1,0 +1,19 @@
+.env
+*.session
+*.session-journal
+channelflow.db
+channelflow_test.db
+channelflow_test.db-wal
+channelflow_test.db-shm
+channelflow.db-wal
+channelflow.db-shm
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Build artifacts handed to testers
+*.zip
