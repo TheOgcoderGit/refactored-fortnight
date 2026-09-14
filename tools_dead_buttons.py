@@ -295,21 +295,43 @@ async def run(target: pathlib.Path, quiet: bool = False):
         if not (references.get(func, set()) - where)
     }
 
+    # A button that works for a disconnected user can still be silent for a
+    # connected one - onboard:create_gate rewrote itself to proj:new only
+    # once connected, and the old single-state sweep never saw it. Press
+    # everything in both states and report whichever one failed.
+    from unittest import mock
+    from core import user_sessions
+
+    STATES = (("disconnected", False), ("connected", True))
+
     dead, unreachable, raised, ok = [], [], [], 0
     for _file, func, variants in buttons:
         first = variants[0]
         crashed = None
-        handled = False
-        for index, data in enumerate(variants):
-            ok_now, note, _log = await press(data, router)
-            if ok_now:
-                handled = True
-                break
-            # Only the most plausible value counts as a real crash; the
-            # synthetic ones just probe whether the action exists at all.
-            if note.startswith("RAISED") and index == 0:
-                crashed = note
-                break
+        handled = True
+        failed_states = []
+        for state_name, connected in STATES:
+            state_ok = False
+            state_crash = None
+            with mock.patch.object(user_sessions, "is_connected",
+                                   return_value=connected):
+                for index, data in enumerate(variants):
+                    ok_now, note, _log = await press(data, router)
+                    if ok_now:
+                        state_ok = True
+                        break
+                    # Only the most plausible value counts as a real crash;
+                    # the synthetic ones just probe whether the action
+                    # exists at all.
+                    if note.startswith("RAISED") and index == 0:
+                        state_crash = note
+                        break
+            if state_ok:
+                continue
+            handled = False
+            failed_states.append(state_name)
+            crashed = crashed or state_crash
+
         if handled:
             ok += 1
         elif crashed:
@@ -317,11 +339,12 @@ async def run(target: pathlib.Path, quiet: bool = False):
         elif func and func in unused:
             unreachable.append((first, _file, func))
         else:
-            dead.append((first, _file))
+            dead.append((first, _file, ",".join(failed_states)))
 
     lines = []
     lines.append(f"Pressed {len(buttons)} distinct callback_data values "
-                 f"as user {USER_ID} on project {PROJECT_ID}")
+                 f"as user {USER_ID} on project {PROJECT_ID}, "
+                 f"in both connected and disconnected states")
 
     if raised:
         lines.append("")
@@ -332,8 +355,8 @@ async def run(target: pathlib.Path, quiet: bool = False):
     if dead:
         lines.append("")
         lines.append(f"### DEAD - reachable but nothing handles them ({len(dead)}):")
-        for data, _file in dead:
-            lines.append(f"  {data:<44} [{_file}]")
+        for data, _file, states in dead:
+            lines.append(f"  {data:<44} silent when {states:<24} [{_file}]")
 
     if unreachable:
         lines.append("")
