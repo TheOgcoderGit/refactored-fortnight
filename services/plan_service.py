@@ -10,6 +10,7 @@ Plans: FREE, BEGINNER, PRO, CREATOR
 """
 
 import json
+import math
 from datetime import datetime, timedelta, timezone
 
 from database.db import get_connection
@@ -275,11 +276,70 @@ def start_trial(telegram_id):
         conn.close()
 
 
+def get_plan_status(telegram_id) -> dict:
+    """Plan plus how much of it is left.
+
+    ``plan_expiry`` was already stored and already enforced by
+    get_user_plan(), but nothing ever surfaced it, so a user on a 7-day
+    Creator trial had no way to know the trial existed - let alone when it
+    ended.
+    """
+
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT plan, plan_expiry FROM users WHERE telegram_id=?",
+                (telegram_id,))
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return {"plan": "FREE", "plan_expiry": None, "days_left": None,
+                "expired": False, "on_trial": False}
+
+    expiry_raw = row["plan_expiry"]
+    expiry = None
+    if expiry_raw:
+        try:
+            expiry = datetime.fromisoformat(expiry_raw)
+            if expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=timezone.utc)
+        except (TypeError, ValueError):
+            expiry = None
+
+    now = datetime.now(timezone.utc)
+    if expiry is None:
+        days_left = None
+        expired = False
+    else:
+        remaining = expiry - now
+        seconds = remaining.total_seconds()
+        expired = seconds <= 0
+        # Round partial days UP: an expiry 6 days 23 hours away is "7 days
+        # left" to a user, not 6. Floor would show 6 the moment the plan is
+        # granted, and then 0 for the last 23 hours.
+        days_left = max(0, math.ceil(seconds / 86400)) if not expired else 0
+
+    effective = row["plan"]
+    if expired:
+        effective = "FREE"
+
+    return {
+        "plan": effective,
+        "stored_plan": row["plan"],
+        "plan_expiry": expiry_raw,
+        "days_left": days_left,
+        "expired": expired,
+        # A trial is a non-free plan the user did not buy - surfaced so the
+        # UI can say "trial" instead of "subscription".
+        "on_trial": effective != "FREE" and days_left is not None,
+    }
+
+
 def get_entitlements(telegram_id) -> dict:
     plan = get_user_plan(telegram_id)
     configs = get_cached_plan_configs()
     plan_config = configs.get(plan, FALLBACK_LIMITS["FREE"])
-    return {**plan_config, "plan": plan}
+    return {**plan_config, "plan": plan, **get_plan_status(telegram_id)}
 
 
 def requires_attribution(telegram_id) -> bool:

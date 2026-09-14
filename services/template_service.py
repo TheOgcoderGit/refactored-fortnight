@@ -87,17 +87,26 @@ TEMPLATES_CATALOG = {
 }
 
 
-async def create_template_project(user_id: int, template_key: str, target_chat: dict) -> int:
-    """Creates a project, pre-adds 2 niche source channels, adds target, and applies rules."""
+async def create_template_project(user_id: int, template_key: str, target_chat: dict,
+                                  sources=None) -> int:
+    """Creates a project, pre-adds the niche source channels, adds target, and applies rules.
+
+    ``sources`` lets the caller pass an edited list (the user can add or
+    remove pre-configured channels before confirming). It defaults to the
+    template's own list.
+    """
     tpl = TEMPLATES_CATALOG.get(template_key)
     if not tpl:
         raise ValueError(f"Unknown template key: {template_key}")
+
+    if sources is None:
+        sources = tpl["sources"]
 
     # 1. Create Project
     pid = create_project(user_id, tpl["default_name"], platform_type="telegram")
 
     # 2. Add Pre-loaded Niche Sources (2 Channels)
-    for src_handle, src_desc in tpl["sources"]:
+    for src_handle, src_desc in sources:
         try:
             src_chat = await get_chat(src_handle, user_id=user_id)
             if src_chat:

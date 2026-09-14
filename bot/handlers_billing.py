@@ -115,9 +115,22 @@ async def render_plans_view(message, user_id: int, edit: bool = False):
         "stars": "⭐ Telegram Stars"
     }
 
+    plan_line = f"👤 Current Plan: **{ent['plan']}**"
+    days_left = ent.get("days_left")
+    if ent.get("expired"):
+        # get_user_plan() already downgrades an expired plan to FREE; say so
+        # rather than showing a plan the user no longer has.
+        plan_line += "\n⏰ Your subscription has ended — you're now on Free."
+    elif ent.get("on_trial"):
+        plan_line += f"\n🎁 **{days_left} day(s) left** on your trial"
+    elif days_left is not None:
+        plan_line += f"\n⏳ **{days_left} day(s) left**"
+    if ent.get("plan_expiry"):
+        plan_line += f"  (renews/ends {ent['plan_expiry'][:10]})"
+
     text = (
         f"💎 **ChannelFlow Plans & Credits Hub**\n\n"
-        f"👤 Current Plan: **{ent['plan']}**\n"
+        f"{plan_line}\n"
         f"⚡ Daily Allowance: **{ent['daily_forward_limit']} forwards/day**\n"
         f"📦 Extra Credits: **{c_bal}**\n"
         f"💳 Active Currency: **{method_labels.get(active_m, 'UPI')}**\n\n"

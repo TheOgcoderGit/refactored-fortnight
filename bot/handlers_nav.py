@@ -391,6 +391,14 @@ async def _reopen_prompt(query, user_id: int, ctx: dict) -> bool:
                     "automatically; you only provide the destination.")
         return True
 
+    if kind == "template_source":
+        hp.WAITING_TEMPLATE_SOURCE[user_id] = ctx.get("tpl")
+        await _send(query,
+                    "➕ **Add a source channel**\n\n"
+                    "Send the public username (`@channel`), an invite link, "
+                    "or a numeric ID. Send /cancel to abort.")
+        return True
+
     if kind == "project_name":
         hp.PENDING_TEMPLATE_CHOICE[user_id] = "blank"
         hp.WAITING_PROJECT_NAME[user_id] = True

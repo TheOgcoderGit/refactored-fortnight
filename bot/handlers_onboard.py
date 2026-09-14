@@ -305,6 +305,18 @@ async def render_account_view(message, user, edit: bool = False):
 
     auto_renew_state = "ON" if (u_row and u_row["auto_renew"]) else "OFF"
     lang_name = "Hinglish" if lang == "hi" else "English"
+
+    # How much plan is left. plan_expiry was stored and enforced but never
+    # shown, so nobody could tell a 7-day Creator trial was running.
+    days_left = ent.get("days_left")
+    if ent.get("expired"):
+        plan_state = "Ended — now on Free"
+    elif ent.get("on_trial"):
+        plan_state = f"{ent['plan']} (trial, {days_left} day(s) left)"
+    elif days_left is not None:
+        plan_state = f"{ent['plan']} ({days_left} day(s) left)"
+    else:
+        plan_state = ent["plan"]
     cur_m = (u_row["wallet_currency"] if u_row and u_row["wallet_currency"] else "upi").upper()
 
     if lang == "hi":
@@ -313,7 +325,7 @@ async def render_account_view(message, user, edit: bool = False):
             f"• Naam: {user.first_name}\n"
             f"• User ID: `{user.id}`\n"
             f"• Telegram Account: {phone}\n"
-            f"• Current Plan: {ent['plan']}\n"
+            f"• Current Plan: {plan_state}\n"
             f"• Daily Quota: {ent['daily_forward_limit']} forwards/din\n"
             f"• Extra Credits: {c_bal}\n"
             f"• Currency: {cur_m}\n"
@@ -326,7 +338,7 @@ async def render_account_view(message, user, edit: bool = False):
             f"• Name: {user.first_name}\n"
             f"• User ID: `{user.id}`\n"
             f"• Telegram Account: {phone}\n"
-            f"• Plan: {ent['plan']}\n"
+            f"• Plan: {plan_state}\n"
             f"• Daily Quota: {ent['daily_forward_limit']} forwards/day\n"
             f"• Extra Credits: {c_bal}\n"
             f"• Currency: {cur_m}\n"

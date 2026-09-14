@@ -45,6 +45,9 @@ WAITING_SOURCE = {}
 WAITING_DESTINATION = {}
 WAITING_TEMPLATE_TARGET = {}
 PENDING_TEMPLATE_CHOICE = {}
+# Per-user edits to a template's pre-configured sources.
+TEMPLATE_SOURCE_DRAFT = {}
+WAITING_TEMPLATE_SOURCE = {}
 
 MAX_NAME_LENGTH = 100
 
@@ -97,6 +100,41 @@ def project_control_keyboard(project_id: int, is_running: bool) -> InlineKeyboar
             InlineKeyboardButton("◀️ Back to Projects", callback_data="nav:projects"),
         ],
     ])
+
+
+# Columns that identify the row rather than describe the configuration.
+# Copying them onto another project either raises (they collide with the
+# positional project_id argument) or silently re-points the row.
+_IDENTITY_COLUMNS = ("id", "project_id", "user_id", "created_at", "updated_at")
+
+
+def _copiable_row(row) -> dict:
+    """A settings row safe to spread into another project's update call."""
+    if not row:
+        return {}
+    return {k: v for k, v in dict(row).items() if k not in _IDENTITY_COLUMNS}
+
+
+def _looks_like_chat_reference(text: str) -> bool:
+    """Cheap format check, so a typo like "Hi" is caught before a round trip."""
+    value = (text or "").strip()
+    if not value:
+        return False
+    if value.lstrip("-").isdigit():
+        return True
+    if "t.me/" in value:
+        return True
+    if value.startswith("@") and len(value) > 1:
+        return True
+    return False
+
+
+def _template_sources(user_id: int, tpl_key: str) -> list:
+    """Pre-configured sources for a template, with any user edits applied."""
+    draft = TEMPLATE_SOURCE_DRAFT.get(user_id)
+    if draft and draft.get("tpl") == tpl_key:
+        return draft["sources"]
+    return list(TEMPLATES_CATALOG.get(tpl_key, {}).get("sources", []))
 
 
 def _project_card_text(project: dict, lang: str = "en") -> str:
@@ -242,19 +280,95 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
         tpl_info = TEMPLATES_CATALOG.get(tpl_key)
         if not tpl_info: return True
 
-        src_lines = "\n".join(f"  {idx+1}. {handle} ({desc})" for idx, (handle, desc) in enumerate(tpl_info["sources"]))
+        sources = _template_sources(user_id, tpl_key)
+        src_lines = "\n".join(f"  {idx+1}. {handle} ({desc})"
+                               for idx, (handle, desc) in enumerate(sources)) or "  (none)"
         text = (
             f"**{tpl_info['title']}**\n\n"
-            f"📥 **Pre-Configured Sources (2 Channels):**\n{src_lines}\n\n"
+            f"📥 **Pre-Configured Sources ({len(sources)}):**\n{src_lines}\n\n"
             f"⚙️ **Automation Pipeline:**\n{tpl_info['desc']}\n\n"
-            f"Ready to launch? Tap Confirm below and send your Target channel:"
+            f"Edit the sources if you want different channels, then tap "
+            f"Confirm and send your target channel:"
         )
         buttons = [
+            [InlineKeyboardButton("✏️ Edit Sources", callback_data=f"proj:tpl_sources:{tpl_key}")],
             [InlineKeyboardButton("✅ Confirm & Setup Target", callback_data=f"proj:tpl_confirm:{tpl_key}")],
-            [InlineKeyboardButton("◀️ Back to Templates", callback_data="proj:show_templates")]
+            [
+                InlineKeyboardButton("◀️ Back to Templates", callback_data="proj:show_templates"),
+                InlineKeyboardButton("🏠 Home", callback_data="nav:home"),
+            ],
         ]
         try: await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(buttons))
         except BadRequest: pass
+        return True
+
+    # Edit the template's pre-configured sources before creating anything.
+    # Previously the sources were baked in: create_template_project() added
+    # them straight away, and if a handle could not be resolved it silently
+    # stored the raw text, leaving a source that never worked.
+    if action == "proj" and parts[1] == "tpl_sources":
+        tpl_key = parts[2]
+        tpl_info = TEMPLATES_CATALOG.get(tpl_key)
+        if not tpl_info: return True
+
+        sources = _template_sources(user_id, tpl_key)
+        rows = []
+        for idx, (handle, desc) in enumerate(sources):
+            rows.append([
+                InlineKeyboardButton(f"📥 {handle}", callback_data="act:noop"),
+                InlineKeyboardButton("❌", callback_data=f"proj:tpl_srcdel:{tpl_key}:{idx}"),
+            ])
+        rows.append([InlineKeyboardButton("➕ Add Another Source",
+                                          callback_data=f"proj:tpl_srcadd:{tpl_key}")])
+        if len(sources) < len(tpl_info["sources"]):
+            rows.append([InlineKeyboardButton("↩️ Restore Defaults",
+                                              callback_data=f"proj:tpl_srcreset:{tpl_key}")])
+        rows.append([InlineKeyboardButton("✅ Done", callback_data=f"proj:tpl_view:{tpl_key}")])
+        rows.append([InlineKeyboardButton("🏠 Home", callback_data="nav:home")])
+
+        text = (
+            f"✏️ **Edit Pre-Configured Sources**\n\n"
+            f"Template: **{tpl_info['title']}**\n\n"
+            + ("\n".join(f"  {idx+1}. {handle} — {desc}"
+                          for idx, (handle, desc) in enumerate(sources))
+               or "  No sources yet — add at least one.")
+            + "\n\nRemove one with ❌, add your own with ➕ Add Another "
+              "Source, then tap ✅ Done."
+        )
+        try: await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(rows))
+        except BadRequest: pass
+        return True
+
+    if action == "proj" and parts[1] == "tpl_srcdel":
+        tpl_key = parts[2]
+        try:
+            index = int(parts[3])
+        except (IndexError, ValueError):
+            return True
+        sources = _template_sources(user_id, tpl_key)
+        if 0 <= index < len(sources):
+            sources.pop(index)
+            TEMPLATE_SOURCE_DRAFT[user_id] = {"tpl": tpl_key, "sources": sources}
+        query.data = f"proj:tpl_sources:{tpl_key}"
+        return await handle_callbacks(query, user_id, "proj",
+                                      ["proj", "tpl_sources", tpl_key], context)
+
+    if action == "proj" and parts[1] == "tpl_srcreset":
+        tpl_key = parts[2]
+        TEMPLATE_SOURCE_DRAFT.pop(user_id, None)
+        query.data = f"proj:tpl_sources:{tpl_key}"
+        return await handle_callbacks(query, user_id, "proj",
+                                      ["proj", "tpl_sources", tpl_key], context)
+
+    if action == "proj" and parts[1] == "tpl_srcadd":
+        tpl_key = parts[2]
+        WAITING_TEMPLATE_SOURCE[user_id] = tpl_key
+        await query.message.reply_text(
+            "➕ **Add a source channel**\n\n"
+            "Send the public username (`@channel`), an invite link, or a "
+            "numeric ID. It will be added to this template's sources.\n\n"
+            "Send /cancel to abort."
+        )
         return True
 
     # User confirms template: prompt for Target Channel
@@ -353,19 +467,44 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
         new_name = f"{orig['name']} (Copy)"[:MAX_NAME_LENGTH]
         new_pid = create_project(user_id, new_name, platform_type=orig["platform_type"])
 
-        stg = get_settings(pid)
-        update_settings(new_pid, **dict(stg))
+        # get_settings() returns the whole row, including project_id - and
+        # update_settings() takes project_id positionally, so spreading the
+        # row straight into it raised
+        # "got multiple values for argument 'project_id'". The project was
+        # created and then the clone died here, leaving a half-copied
+        # project behind. Strip the identity columns before spreading.
+        stg = _copiable_row(get_settings(pid))
+        update_settings(new_pid, **stg)
 
         cfg = formatting_service.get_advanced(pid)
         formatting_service.configure(user_id, new_pid, cfg)
-        wm = watermark_service.ensure_watermark_settings(pid)
+        wm = _copiable_row(watermark_service.ensure_watermark_settings(pid))
         watermark_service.update_watermark_settings(new_pid, **wm)
-        aff = affiliate_service.ensure_affiliate_settings(pid)
+        aff = _copiable_row(affiliate_service.ensure_affiliate_settings(pid))
         affiliate_service.update_affiliate_settings(new_pid, **aff)
 
         await force_refresh_routes()
-        t_cloned = f"📋 Project Cloned!\n\nCreated '{new_name}' in Paused state with all rules copied."
-        await query.message.reply_text(t_cloned, reply_markup=project_control_keyboard(new_pid, False))
+
+        # Say what was copied and where to find it. The clone itself is
+        # paused on purpose, so the confirmation has to tell the user their
+        # new project is NOT forwarding yet.
+        await query.message.reply_text(
+            f"✅ **Project cloned**\n\n"
+            f"📁 **{new_name}**\n"
+            f"⏸ State: **Paused** (start it when you're ready)\n\n"
+            f"Copied across: forwarding rules, formatting, watermark, "
+            f"affiliate settings and filters.\n\n"
+            f"Sources and targets are **not** copied — add them before "
+            f"starting so it forwards to the right places.",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("📂 Open Cloned Project",
+                                      callback_data=f"projcard:{new_pid}")],
+                [InlineKeyboardButton("🎯 Add Targets", callback_data=f"tgt:list:{new_pid}"),
+                 InlineKeyboardButton("📥 Add Sources", callback_data=f"src:list:{new_pid}")],
+                [InlineKeyboardButton("📁 My Projects", callback_data="nav:projects"),
+                 InlineKeyboardButton("🏠 Home", callback_data="nav:home")],
+            ]),
+        )
         return True
 
     # 6. Sources Complete Management
@@ -625,6 +764,19 @@ async def handle_callbacks(query: CallbackQuery, user_id: int, action: str, part
 # ==========================================
 
 async def handle_text(message, user_id: int, text: str, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    # 0. Universal cancel - MUST come before any pending-prompt branch.
+    # While "send your channel" is open, that branch treats the next
+    # message as the channel no matter what it says, so a /cancel typed
+    # there used to be stored as a channel called "/cancel".
+    if text.strip().lower() in ("/cancel", "cancel"):
+        had_pending = error_actions.cancel_pending(user_id)
+        await message.reply_text(
+            "❌ Cancelled. Nothing was changed." if had_pending
+            else "Nothing to cancel - you're all set.",
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("🏠 Home", callback_data="nav:home")]]))
+        return True
+
     # 1. Manual Project Creation Naming
     if PENDING_TEMPLATE_CHOICE.get(user_id) == "blank" and WAITING_PROJECT_NAME.get(user_id):
         PENDING_TEMPLATE_CHOICE.pop(user_id, None)
@@ -636,6 +788,58 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
         await message.reply_text(
             f"✅ **Project '{text}' Created Successfully!**\n\nNext: Add your source and target channels below:",
             reply_markup=project_control_keyboard(pid, False)
+        )
+        return True
+
+    # 1b. Adding a source to a template before it is created
+    if WAITING_TEMPLATE_SOURCE.get(user_id):
+        tpl_key = WAITING_TEMPLATE_SOURCE.pop(user_id)
+        handle = text.strip()
+
+        if not _looks_like_chat_reference(handle):
+            WAITING_TEMPLATE_SOURCE[user_id] = tpl_key
+            await message.reply_text(
+                "✏️ **That doesn't look like a channel.**\n\n"
+                "Send a public username (`@channel`), an invite link "
+                "(`https://t.me/+AbCd...`), or a numeric ID "
+                "(`-1001234567890`). Send /cancel to abort.",
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("❌ Cancel", callback_data="act:cancel")],
+                ]),
+            )
+            return True
+
+        resolved = None
+        try:
+            resolved = await get_chat(handle, user_id=user_id)
+        except Exception as e:
+            if error_actions.classify(e) == "not_connected":
+                # No connected account yet - accept the handle and let the
+                # project creation verify it, rather than blocking here.
+                resolved = None
+            else:
+                error_actions.remember_retry(user_id, "template_source", tpl=tpl_key)
+                await error_actions.reply_resolution_failure(message, e, "source")
+                return True
+
+        sources = _template_sources(user_id, tpl_key)
+        if resolved:
+            sources.append((handle, resolved.get("title") or handle))
+        else:
+            sources.append((handle, "unverified — will be checked at setup"))
+        TEMPLATE_SOURCE_DRAFT[user_id] = {"tpl": tpl_key, "sources": sources}
+
+        note = ("✅ Verified and added." if resolved else
+                "⚠️ Added, but it could not be verified yet — connect your "
+                "account and it will be checked when the project is created.")
+        await message.reply_text(
+            f"{note}\n\nThis template now has {len(sources)} source(s).",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("✏️ Back to Sources",
+                                      callback_data=f"proj:tpl_sources:{tpl_key}")],
+                [InlineKeyboardButton("✅ Confirm & Setup Target",
+                                      callback_data=f"proj:tpl_confirm:{tpl_key}")],
+            ]),
         )
         return True
 
@@ -672,7 +876,10 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
 
         try:
             # Create Turnkey Project with 2 Pre-loaded Sources + Target + Rules
-            pid = await create_template_project(user_id, tpl_key, target_chat)
+            pid = await create_template_project(
+                user_id, tpl_key, target_chat,
+                sources=_template_sources(user_id, tpl_key))
+            TEMPLATE_SOURCE_DRAFT.pop(user_id, None)
             await force_refresh_routes()
 
             src_names = ", ".join(h for h, _ in tpl_info["sources"])
@@ -730,14 +937,6 @@ async def handle_text(message, user_id: int, text: str, context: ContextTypes.DE
         return True
 
     # 5. Feature hub text input (prefix/suffix, filters, watermark text, ...)
-    # Universal cancel: works in every flow, not just onboarding.
-    if text.strip().lower() in ("/cancel", "cancel"):
-        if error_actions.cancel_pending(user_id):
-            await message.reply_text("❌ Cancelled. Nothing was changed.",
-                                     reply_markup=InlineKeyboardMarkup(
-                                         [[InlineKeyboardButton("🏠 Home", callback_data="nav:home")]]))
-            return True
-
     if await handlers_features.handle_text(message, user_id, text, context):
         return True
 
