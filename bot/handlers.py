@@ -139,46 +139,10 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
 
 
-async def dispatch_callback(query, user_id: int, action: str, parts: list,
-                            context: ContextTypes.DEFAULT_TYPE,
-                            update=None) -> bool:
-    """Routes a callback to whichever handler module owns it.
-
-    Split out of button_handler so the dispatch table can be exercised
-    directly - tools_dead_buttons.py presses every callback_data the UI can
-    produce through this one function, which is what catches dead buttons
-    and stale-state crashes before users do.
-    """
-
-    # Universal Home Action (Works from everywhere)
-    if action == "nav" and len(parts) > 1 and parts[1] == "home":
-        from bot.handlers_onboard import connected_home_keyboard, disconnected_home_keyboard, returning_unconnected_keyboard, welcome_keyboard, get_user_lang
-        from services import plan_service
-        from config import ADMIN_IDS
-        from core import user_sessions
-        from database.db import get_connection
-
-        lang = get_user_lang(user_id)
-        is_conn = user_id in ADMIN_IDS or user_sessions.is_connected(user_id)
-
-        if is_conn:
-            ent = plan_service.get_entitlements(user_id)
-            is_vip = ent["plan"] == "CREATOR" or user_id in ADMIN_IDS
-            t_msg = "🎉 ChannelFlow Home Menu:" if lang == "hi" else "🎉 ChannelFlow Home:"
-            try: await query.edit_message_text(t_msg, reply_markup=connected_home_keyboard(is_vip=is_vip, lang=lang))
-            except BadRequest: pass
-        else:
-            conn = get_connection(); cur = conn.cursor()
-            cur.execute("SELECT 1 FROM user_telegram_sessions WHERE telegram_id=?", (user_id,))
-            had_session = cur.fetchone() is not None; conn.close()
-            if had_session:
-                t_msg = "⚠️ Aapka account session disconnected hai." if lang == "hi" else "⚠️ Your account session is disconnected."
-                try: await query.edit_message_text(t_msg, reply_markup=disconnected_home_keyboard(lang=lang))
-                except BadRequest: pass
-            else:
-                try: await query.edit_message_text("🎉 Welcome to ChannelFlow AI!", reply_markup=welcome_keyboard())
-                except BadRequest: pass
-        return True
+async def _delegate_once(query, user_id: int, action: str, parts: list,
+                         context: ContextTypes.DEFAULT_TYPE,
+                         update=None) -> bool:
+    """A single pass down the module chain. True if a module handled it."""
 
     # Delegate in order
     if hasattr(handlers_onboard, "handle_callbacks") and await handlers_onboard.handle_callbacks(query, user_id, action, parts, context):
@@ -230,6 +194,81 @@ async def dispatch_callback(query, user_id: int, action: str, parts: list,
         if sub == "support" and hasattr(handlers_admin, "render_support_view"):
             await handlers_admin.render_support_view(query.message, user_id)
             return True
+
+    return False
+
+
+async def dispatch_callback(query, user_id: int, action: str, parts: list,
+                            context: ContextTypes.DEFAULT_TYPE,
+                            update=None) -> bool:
+    """Routes a callback to whichever handler module owns it.
+
+    Split out of button_handler so the dispatch table can be exercised
+    directly - tools_dead_buttons.py presses every callback_data the UI can
+    produce through this one function, which is what catches dead buttons
+    and stale-state crashes before users do.
+    """
+
+    # Universal Home Action (Works from everywhere)
+    if action == "nav" and len(parts) > 1 and parts[1] == "home":
+        from bot.handlers_onboard import connected_home_keyboard, disconnected_home_keyboard, returning_unconnected_keyboard, welcome_keyboard, get_user_lang
+        from services import plan_service
+        from config import ADMIN_IDS
+        from core import user_sessions
+        from database.db import get_connection
+
+        lang = get_user_lang(user_id)
+        is_conn = user_id in ADMIN_IDS or user_sessions.is_connected(user_id)
+
+        if is_conn:
+            ent = plan_service.get_entitlements(user_id)
+            is_vip = ent["plan"] == "CREATOR" or user_id in ADMIN_IDS
+            t_msg = "🎉 ChannelFlow Home Menu:" if lang == "hi" else "🎉 ChannelFlow Home:"
+            try: await query.edit_message_text(t_msg, reply_markup=connected_home_keyboard(is_vip=is_vip, lang=lang))
+            except BadRequest: pass
+        else:
+            conn = get_connection(); cur = conn.cursor()
+            cur.execute("SELECT 1 FROM user_telegram_sessions WHERE telegram_id=?", (user_id,))
+            had_session = cur.fetchone() is not None; conn.close()
+            if had_session:
+                t_msg = "⚠️ Aapka account session disconnected hai." if lang == "hi" else "⚠️ Your account session is disconnected."
+                try: await query.edit_message_text(t_msg, reply_markup=disconnected_home_keyboard(lang=lang))
+                except BadRequest: pass
+            else:
+                try: await query.edit_message_text("🎉 Welcome to ChannelFlow AI!", reply_markup=welcome_keyboard())
+                except BadRequest: pass
+        return True
+
+    # Delegate in order.
+    #
+    # A handler hands a button to another module by rewriting query.data
+    # and returning False; about twenty call sites do this. The dispatcher
+    # used to keep walking the chain with the ORIGINAL action and parts,
+    # so every one of those redirects was silently dropped - the button
+    # did nothing and the bot said nothing at all. "➕ Create Project" on
+    # the How It Works screen was one of them: a connected user tapped it
+    # and got silence instead of the create screen.
+    #
+    # So re-read query.data after each pass and go round again when a
+    # handler changed it. Bounded, and it refuses to loop on a redirect
+    # that points back at itself.
+    seen = set()
+    for _ in range(6):
+        data = query.data or ""
+        if data in seen:
+            break
+        seen.add(data)
+
+        if await _delegate_once(query, user_id,
+                                data.split(":")[0] if data else "",
+                                data.split(":") if data else [],
+                                context, update):
+            return True
+
+        if (query.data or "") == data:
+            break  # nothing redirected - the chain is finished
+
+    return False
 
     return False
 
